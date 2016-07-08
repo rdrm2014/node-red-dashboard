@@ -44,8 +44,15 @@ module.exports = function(RED) {
                             break;
                         }
                     }
+
+                    var color = msg.color;
                     if (!found) {
                         found = { key: topic, values: [] };
+
+                        if(color){
+                            found['color'] = color;
+                        }
+
                         oldValue.push(found);
                     }
 
