@@ -51,6 +51,10 @@ module.exports = function(RED) {
                         oldValue.push(found);
                     }
 
+                    if(msg.color){
+                       found['color'] = msg.color;
+                    }
+
                     var time = new Date().getTime();
                     var point = [time, value];
                     found.values.push(point);
