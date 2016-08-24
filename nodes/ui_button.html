@@ -7,13 +7,14 @@
             group: {type: 'ui_group', required: true},
             order: {value: 0},
             width: {value: 0, validate: function(v) {
-                var width = v||0;
-                var currentGroup = $('#node-input-group').val()||this.group;
-                var groupNode = RED.nodes.node(currentGroup);
-                var valid = !groupNode || +width <=  +groupNode.width;
-                $("#node-input-size").toggleClass("input-error",!valid);
-                return valid;
-            }},
+                    var width = v||0;
+                    var currentGroup = $('#node-input-group').val()||this.group;
+                    var groupNode = RED.nodes.node(currentGroup);
+                    var valid = !groupNode || +width <= +groupNode.width;
+                    $("#node-input-size").toggleClass("input-error",!valid);
+                    return valid;
+                }
+            },
             height: {value: 0},
             label: {value: 'button'},
             color: {value: ''},
@@ -22,7 +23,7 @@
             payloadType: { value: 'str'},
             topic: {value: ''}
         },
-        inputs:0,
+        inputs:1,
         outputs:1,
         icon: "ui_button.png",
         paletteLabel: 'button',
@@ -94,4 +95,5 @@
     <i>(e.g. 'fa-fire')</i>.</p>
     <p>If the <b>Color</b> is defined, the color of the buttons content changes accordingly.</p>
     <p>The <b>Topic</b> field can be used to set the <code>msg.topic</code> property.</p>
+    <p>Setting `msg.enabled` to `false` will disable the button.</p>
 </script>

@@ -85,16 +85,22 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
                     found[key] = msg[key];
                 }
             }
+            
+            // PL
+            if (found.hasOwnProperty("me") && found.me.hasOwnProperty("processInput")) {
+                found.me.processInput(msg);
+            }
         });
 
         events.on('show-toast', function (msg) {
             var toastScope = $rootScope.$new();
             toastScope.toast = msg;
-            $mdToast.show({
+            var opts = {
                 scope: toastScope,
                 templateUrl: 'partials/toast.html',
-                hideDelay: 3000,
-                position: 'top right'
-            });
+                hideDelay: msg.displayTime,
+                position: msg.position
+            };
+            $mdToast.show(opts);
         });
     }]);

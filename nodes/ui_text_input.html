@@ -6,13 +6,14 @@
             group: {type: 'ui_group', required: true},
             order: {value: 0},
             width: {value: 0, validate: function(v) {
-                var width = v||0;
-                var currentGroup = $('#node-input-group').val()||this.group;
-                var groupNode = RED.nodes.node(currentGroup);
-                var valid = !groupNode || +width <=  +groupNode.width;
-                $("#node-input-size").toggleClass("input-error",!valid);
-                return valid;
-            }},
+                    var width = v||0;
+                    var currentGroup = $('#node-input-group').val()||this.group;
+                    var groupNode = RED.nodes.node(currentGroup);
+                    var valid = !groupNode || +width <= +groupNode.width;
+                    $("#node-input-size").toggleClass("input-error",!valid);
+                    return valid;
+                }
+            },
             height: {value: 0},
             name: {value: ''},
             mode: {value: 'text', required: true},
@@ -81,7 +82,9 @@
   <p>Adds a text input field to the user interface. Mode can be regular text, email or color picker.</p>
   <p>Text written by the user is sent in realtime as the <code>msg.payload</code>. You can also
   preset the text of the input field by sending in a <code>msg.payload</code>.</p>
-  <p>The <b>Delay</b> <i>(default : 300ms)</i> sets the amount of time in milliseconds before the output is sent.</p>
+  <p>The <b>Delay</b> <i>(default : 300ms)</i> sets the amount of time in milliseconds before the output is sent.
+  Setting to <code>0</code> waits for "Enter" key to send.</p>
   <p>The email mode will color in red if it is not a valid address and will return undefined.</p>
   <p>If a <b>Topic</b> is specified, it will be added as <code>msg.topic</code>.</p>
+  <p>Setting `msg.enabled` to `false` will disable the input.</p>
 </script>
