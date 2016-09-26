@@ -13,11 +13,11 @@ module.exports = function(RED) {
         var onvalueType = config.onvalueType;
         var offvalueType = config.offvalueType;
 
-
         var done = ui.add({
             node: node,
             tab: tab,
             group: group,
+            forwardInputMessages: config.passthru,
             control: {
                 type: 'switch' + (config.style ? '-' + config.style : ''),
                 label: config.label,
@@ -37,6 +37,7 @@ module.exports = function(RED) {
                 } else {
                     onvalue = RED.util.evaluateNodeProperty(config.onvalue,onvalueType,node);
                 }
+
                 var offvalue;
                 if (offvalueType === "date") {
                     offvalue = Date.now();
