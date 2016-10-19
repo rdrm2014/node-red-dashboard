@@ -1,3 +1,4 @@
+
 var inited = false;
 
 module.exports = function(RED) {
@@ -21,7 +22,8 @@ var serveStatic = require('serve-static'),
     socketio = require('socket.io'),
     path = require('path'),
     fs = require('fs'),
-    events = require('events');
+    events = require('events'),
+    dashboardVersion = require('./package.json').version;
 
 var baseConfiguration = {
     title: "Node-RED Dashboard",
@@ -200,7 +202,7 @@ function init(server, app, log, redSettings) {
         }
     });
 
-    log.info("Dashboard started at " + fullPath);
+    log.info("Dashboard version " + dashboardVersion + " started at " + fullPath);
 
     io.on('connection', function(socket) {
         updateUi(socket);

@@ -95,6 +95,32 @@ angular.module('ui').controller('uiComponentController', ['$scope', 'UiEvents', 
                             return d3.time.format(me.item.xformat)(new Date(d));
                         };
                     }
+                    break;
+                }
+                case 'form': {
+                    me.stop=function(event) {
+                        if (13 == event.which) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                    }
+                    me.submit = function () {
+                        me.item.value = JSON.parse(JSON.stringify(me.item.formValue));
+                        me.valueChanged(0);
+                        me.reset();
+                    };
+                    me.reset = function () {
+                        for (var x in me.item.formValue) {
+                            if (typeof (me.item.formValue[x]) === "boolean") {
+                                me.item.formValue[x] = false;
+                            }
+                            else {
+                                me.item.formValue[x] = "";
+                            }
+                        }
+                        $scope.$$childTail.form.$setUntouched();
+                        $scope.$$childTail.form.$setPristine();
+                    };
                 }
             }
         }
@@ -108,7 +134,7 @@ angular.module('ui').controller('uiComponentController', ['$scope', 'UiEvents', 
 
         // will emit me.item.value when enter is pressed
         me.keyPressed = function (event) {
-            if (event.charCode === 13) {
+            if ((event.charCode === 13) || (event.which === 13)) {
                 events.emit({ id:me.item.id, value:me.item.value });
             }
         }

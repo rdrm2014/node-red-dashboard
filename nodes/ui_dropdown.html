@@ -17,6 +17,7 @@
                 }
             },
             height: {value: 0},
+            passthru: {value: true},
             options: {value:[{value: '', label : ''}], validate:function(value) { return value.length > 0; }},
             payload: {value: ''},
             topic: {value: ''}
@@ -46,7 +47,7 @@
 
                 $('<i style="color: #eee; cursor: move; margin-left: 3px;" class="node-input-option-handle fa fa-bars"></i>').appendTo(row);
 
-                var valueField = $('<input/>',{class:"node-input-option-value",type:"text",style:"margin-left: 7px; width: 135px;", placeholder: 'Value',value:option.value}).appendTo(row).typedInput({default:'str',types:['str','num','bool']});
+                var valueField = $('<input/>',{class:"node-input-option-value",type:"text",style:"margin-left: 7px; width: 135px;", placeholder: 'Value',value:option.value}).appendTo(row).typedInput({default:option.type||'str',types:['str','num','bool']});
                 var labelField = $('<input/>',{class:"node-input-option-label",type:"text",style:"margin-left: 7px; width: 135px;", placeholder: 'Label', value:option.label}).appendTo(row);
 
                 var finalspan = $('<span/>',{style:"float: right;margin-right: 10px;"}).appendTo(row);
@@ -68,7 +69,7 @@
                 $("#node-input-option-container-div").scrollTop($("#node-input-option-container-div").get(0).scrollHeight);
             });
 
-            for (var i=0;i<this.options.length;i++) {
+            for (var i=0; i<this.options.length; i++) {
                 var option = this.options[i];
                 generateOption(i+1,option);
             }
@@ -87,8 +88,15 @@
                 var option = $(this);
                 var o = {
                     label: option.find(".node-input-option-label").val(),
-                    value: option.find(".node-input-option-value").typedInput('value')
+                    value: option.find(".node-input-option-value").typedInput('value'),
+                    type: option.find(".node-input-option-value").typedInput('type')
                 };
+                if (option.find(".node-input-option-value").typedInput('type') === "num") {
+                    o.value = Number(o.value);
+                }
+                if (option.find(".node-input-option-value").typedInput('type') === "bool") {
+                    o.value = (o.value == "true");
+                }
                 node.options.push(o);
             });
         },
@@ -128,6 +136,10 @@
         <a href="#" class="editor-button editor-button-small" id="node-input-add-option" style="margin-top: 4px; margin-left: 103px;"><i class="fa fa-plus"></i> <span>option</span></a>
     </div>
     <div class="form-row">
+        <label style="width:auto" for="node-input-passthru"><i class="fa fa-play"></i> If <code>msg</code> arrives on input, pass through to output: </label>
+        <input type="checkbox" checked id="node-input-passthru" style="display:inline-block; width:auto; vertical-align:top;">
+    </div>
+    <div class="form-row">
         <label for="node-input-topic"><i class="fa fa-tasks"></i> Topic</label>
         <input type="text" id="node-input-topic" placeholder="optional msg.topic">
     </div>
@@ -141,10 +153,10 @@
     <p>Adds a dropdown select box to the user interface.</p>
     <p>Multiple value / label pairs can be added as required.</p>
     <p>The configured value of the selected item will be returned as <code>msg.payload</code>.</p>
+    <p>Setting <code>msg.payload</code> will set the pre-selected choice in the dropdown.</p>
     <p>Optionally the <b>Topic</b> field can be used to set the <code>msg.topic</code> property.</p>
     <p>The Options may be configured by inputting <code>msg.options</code> containing an array.
     If just text then the value will be the same as the label, otherwise you can specify both by
     using an object of <code>"label":"value"</code> pairs :</p>
     <code>[ "Choice 1", "Choice 2", {"Choice 3":"3"} ]</code>
-    <p>Setting <code>msg.payload</code> will set the pre-selected choice in the dropdown.</p>
 </script>
