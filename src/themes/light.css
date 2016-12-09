@@ -16,6 +16,10 @@ body.nr-dashboard-theme-light md-content {
     height: 100%;
 }
 
+body.nr-dashboard-theme-light md-select-menu md-content {
+    height: initial;
+}
+
 body.nr-dashboard-theme-light md-content md-card {}
 
 /* Some colour classes */
@@ -71,12 +75,9 @@ body.nr-dashboard-theme-light md-sidenav {}
 
 /* Chart */
 
-.nr-dashboard-theme-light .nr-dashboard-linechart {}
-
-.nr-dashboard-theme-light .nr-dashboard-linechart text {}
-
-.nr-dashboard-theme-light .nr-dashboard-linechart .nvd3 .nv-axis path,
-.nr-dashboard-theme-light .nr-dashboard-linechart .nvd3 .nv-axis line {}
+.nr-dashboard-theme-light .nr-dashboard-chart-title  {
+	font-size: larger;
+}
 
 /* Dropdown */
 

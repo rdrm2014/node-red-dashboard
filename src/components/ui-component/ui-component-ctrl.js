@@ -22,10 +22,6 @@ angular.module('ui').controller('uiComponentController', ['$scope', 'UiEvents', 
                 }
 
                 case 'dropdown': {
-                    if (me.item.value !== me.item.id) {
-                        // push through any already selected value
-                        me.valueChanged(0);
-                    }
                     me.itemChanged = function () {
                         me.valueChanged(0);
                     };
@@ -79,24 +75,10 @@ angular.module('ui').controller('uiComponentController', ['$scope', 'UiEvents', 
                 }
 
                 case 'chart': {
-                    if (!me.item.value || me.item.value === "changed") {
-                        me.item.value = [];
-                    }
-                    if (me.item.look === "line") {
-                        var lineColors = {
-                            'theme-dark': ['#0FBBC3', '#ffA500', '#00AF25', '#FF738C', '#E1E41D', '#C273FF', '#738BFF', '#FF7373', '#4D7B47', '#887D47']
-                        };
-                        me.item.value.forEach(function (line, index) {
-                            if (lineColors[$scope.main.selectedTab.theme]) {
-                                line.color = lineColors[$scope.main.selectedTab.theme][index];
-                            }
-                        })
-                        me.formatTime = function (d) {
-                            return d3.time.format(me.item.xformat)(new Date(d));
-                        };
-                    }
+                    me.item.theme = $scope.main.selectedTab.theme;
                     break;
                 }
+
                 case 'form': {
                     me.stop=function(event) {
                         if (13 == event.which) {

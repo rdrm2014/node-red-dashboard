@@ -1,5 +1,5 @@
 
-var app = angular.module('ui', ['ngMaterial', 'ngMdIcons', 'ngSanitize', 'nvd3ChartDirectives', 'sprintf']);
+var app = angular.module('ui', ['ngMaterial', 'ngMdIcons', 'ngSanitize', 'sprintf', 'chart.js']);
 
 app.config(['$mdThemingProvider', '$compileProvider',
     function ($mdThemingProvider, $compileProvider) {
@@ -21,15 +21,17 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
 
         function moveTab(d) {
             var len = main.tabs.length;
+            var i = parseInt($location.path().substr(1));
             if (len > 1) {
-                var i = (main.selectedTab.order - 1 + d) % len;
+                i = (i + d) % len;
                 if (i < 0) { i += len; }
                 main.select(i);
             }
         }
 
-        $scope.onSwipeLeft = function(ev) { moveTab(-1); }
-        $scope.onSwipeRight = function(ev) { moveTab(1); }
+        //TODO Disabled until we make it an option - too sensitive for some
+        //$scope.onSwipeLeft = function(ev) { moveTab(-1); }
+        //$scope.onSwipeRight = function(ev) { moveTab(1); }
 
         this.toggleSidenav = function () {
             $mdSidenav('left').toggle();
@@ -38,7 +40,9 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
         this.select = function (index) {
             main.selectedTab = main.tabs[index];
             if (main.tabs.length > 0) { $mdSidenav('left').close(); }
+            events.emit('ui-replay-state', {});
             $location.path(index);
+
         };
 
         this.open = function (link, index) {
@@ -88,8 +92,10 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
 
         events.on(function (msg) {
             var found = findControl(msg.id, main.tabs);
+
             if (found === undefined) { return; }
             for (var key in msg) {
+
                 if (msg.hasOwnProperty(key)) {
                     if (key === 'id') { continue; }
                     found[key] = msg[key];
@@ -152,6 +158,7 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
         });
 
         events.on('ui-control', function(msg) {
+            if (msg.hasOwnProperty("socketid") && (msg.socketid !== events.id) ) { return; }
             if (msg.hasOwnProperty("tab")) { // if it's a request to change tabs
                 if (typeof msg.tab === 'string') {
                     // is it the name of a tab ?
@@ -181,6 +188,13 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
         });
 
         events.on('ui-audio', function(msg) {
+            var totab;
+            for (var i in main.tabs) {
+                if (msg.tabname === main.tabs[i].header) { totab = i; }
+            }
+            // only play sound/tts to tab if in focus
+            if (totab != parseInt($location.path().substr(1))) { return; }
+
             if (msg.hasOwnProperty("tts")) {
                 if ('speechSynthesis' in window) {
                     var voices = window.speechSynthesis.getVoices();
