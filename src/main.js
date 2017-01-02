@@ -1,5 +1,5 @@
 
-var app = angular.module('ui', ['ngMaterial', 'ngMdIcons', 'ngSanitize', 'sprintf', 'chart.js']);
+var app = angular.module('ui', ['ngMaterial', 'ngMdIcons', 'ngSanitize', 'sprintf', 'chart.js', 'color.picker']);
 
 app.config(['$mdThemingProvider', '$compileProvider',
     function ($mdThemingProvider, $compileProvider) {
@@ -16,6 +16,7 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
 
         this.tabs = [];
         this.links = [];
+        this.len = 0;
         this.selectedTab = null;
         this.loaded = false;
 
@@ -77,6 +78,7 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
             done();
         }, function () {
             main.loaded = true;
+            main.len = main.tabs.length + main.links.length;
         });
 
         function findControl(id, items) {

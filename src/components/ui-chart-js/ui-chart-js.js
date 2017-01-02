@@ -9,6 +9,20 @@ angular.module('ui').directive('uiChartJs', [ '$timeout', '$interpolate',
                 $timeout(function() {
                     var type = scope.$eval('me.item.look');
                     scope.config = loadConfiguration(type, scope);
+                    
+                    // Fix autoskip so last two scale labels don't overlap
+                    Chart.scaleService.updateScaleDefaults('time', {
+                        afterBuildTicks: function(me){
+                            var end = me.ticks.length-1;
+                            if (end > 1) {
+                                var lastDiff = me.parseTime(me.ticks[end]).diff(me.parseTime(me.ticks[end-1]));
+                                var penulDiff = me.parseTime(me.ticks[end-1]).diff(me.parseTime(me.ticks[end-2]));
+                                if (lastDiff < penulDiff) {
+                                   me.ticks.splice(end-1,1);
+                                }
+                            }
+                        }
+                    });
 
                     // When new values arrive, update the chart
                     scope.$watch('me.item.value', function (newValue) {
@@ -53,7 +67,8 @@ angular.module('ui').directive('uiChartJs', [ '$timeout', '$interpolate',
                             else {
                                 // Bar charts and non update line charts replace the data
                                 scope.config.data = newValue.values.data;
-                                (type === 'line') ? scope.config.series = newValue.values.series : scope.config.labels = newValue.values.series;
+                                if (type === 'line') { scope.config.series = newValue.values.series }
+                                else { scope.config.labels = newValue.values.series; }
                             }
                         }
                         else {
@@ -226,7 +241,12 @@ function loadConfiguration(type,scope) {
         if (type === 'pie') {
             config.options.legend.position = 'left';
         }
-        (scope.$eval('me.item.theme') === 'theme-dark') ? config.options.legend.labels = { fontColor:"#fff" } : config.options.legend.labels = {fontColor:"#666"};
+        if (scope.$eval('me.item.theme') === 'theme-dark') {
+            config.options.legend.labels = { fontColor:"#fff" };
+        }
+        else {
+            config.options.legend.labels = {fontColor:"#666"};
+        }
     }
     return config;
 }
