@@ -155,7 +155,7 @@
                 if (globalDashboardNode !== null) {
                     // Check if it has been deleted beneath us
                     var n = RED.nodes.node(globalDashboardNode.id);
-                    if (n===null) {
+                    if (n === null) {
                         globalDashboardNode = null;
                     }
                 }
@@ -173,7 +173,7 @@
                             name: "Node-RED Dashboard",
                             theme: "theme-light",
                             url: 'ui',
-                            users:[]
+                            users: []
                         }
                         RED.nodes.add(globalDashboardNode);
                         RED.nodes.dirty(true);
