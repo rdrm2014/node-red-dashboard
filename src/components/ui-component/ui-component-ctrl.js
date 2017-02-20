@@ -119,6 +119,18 @@ angular.module('ui').controller('uiComponentController', ['$scope', 'UiEvents', 
                     break;
                 }
 
+                case 'date-picker': {
+                    me.processInput = function (msg) {
+                        msg.value = new Date(msg.value);
+                    };
+                    me.setDate = function () {
+                        me.item.value = me.item.ddd;
+                        me.valueChanged(0);
+                    };
+                    me.item.me = me;
+                    break;
+                }
+
                 case 'form': {
                     me.stop = function(event) {
                         if ((event.charCode === 13) || (event.which === 13)) {

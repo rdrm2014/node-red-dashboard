@@ -1,3 +1,12 @@
+<style>
+    input.series-color {
+        width: 100px;
+        text-align: center;
+    }
+    input.series-color::-webkit-color-swatch {
+        border: none;
+    }
+</style>
 <script type="text/javascript">
     RED.nodes.registerType('ui_chart',{
         category: 'dashboard',
@@ -26,10 +35,12 @@
             removeOlder: {value: 1, validate:RED.validators.number(), required:true},
             removeOlderPoints: {value: '', validate:function(value) { return value === '' || RED.validators.number(); }},
             removeOlderUnit: {value: '3600', required:true},
-            cutout: {value: 0}
+            cutout: {value: 0},
+            colors: {value: ['#1F77B4', '#AEC7E8', '#FF7F0E', '#2CA02C', '#98DF8A', '#D62728', '#FF9896', '#9467BD', '#C5B0D5']},
         },
         inputs:1,
         outputs:2,
+        outputLabels: ["chart state","(deprecated)"],
         align: "right",
         icon: "ui_chart.png",
         paletteLabel: 'chart',
@@ -71,6 +82,17 @@
                     }
                 }
             });
+            var setColour = function(id, value) {
+                $(id).val(value);
+                $(id).css("background-color", value);
+                var rgb = tinycolor(value).toRgb();
+                var level = ((rgb.r*299) + (rgb.g*587) + (rgb.b*114))/1000;
+                var textColor = (level >= 128) ? '#111111' : '#eeeeee';
+                $(id).css("color", textColor);
+            }
+            $(".series-color").change(function() {
+                setColour("#"+$(this).attr("id"), $(this).val());
+            });
             if (!$("#node-input-chartType").val()) {
                 $("#node-input-chartType").val("line");
             }
@@ -92,11 +114,29 @@
                 default: odef,
                 types:[ ohms, ohm, oahm, odm, oymd, ocus ]
             });
+            var defaultColors = ['#1F77B4', '#AEC7E8', '#FF7F0E', '#2CA02C', '#98DF8A', '#D62728', '#FF9896', '#9467BD', '#C5B0D5'];
+
+            if (this.colors) {
+                for (var i=0; i<this.colors.length; i++) {
+                    var value = this.colors[i] || defaultColors[i];
+                    setColour("#node-input-color"+(i+1), value);
+                }
+            }
+            else {
+                for (var c=0; c<defaultColors.length; c++) {
+                    setColour("#node-input-color"+(c+1), defaultColors[c]);
+                }
+            }
+
         },
         oneditsave: function() {
             if ($("#node-input-xformat").typedInput('type') !== 'custom') {
                 $("#node-input-xformat").val($("#node-input-xformat").typedInput('type'));
             }
+            this.colors = [$("#node-input-color1").val(),$("#node-input-color2").val(),$("#node-input-color3").val(),
+            $("#node-input-color4").val(),$("#node-input-color5").val(),$("#node-input-color6").val(),
+            $("#node-input-color7").val(),$("#node-input-color8").val(),$("#node-input-color9").val()];
+
         }
     });
 </script>
@@ -168,6 +208,22 @@
         <span id="hole-size-show">&nbsp;&nbsp;&nbsp;&nbsp;Cutout
         <input type="text" id="node-input-cutout" style="width:35px"> %
         </span>
+    </div>
+    <div class="form-row" id="ui-chart-colours">
+        <label for="node-input-color1">Series Colours</label>
+        <input type="color" id="node-input-color1" class="series-color"/>
+        <input type="color" id="node-input-color2" class="series-color"/>
+        <input type="color" id="node-input-color3" class="series-color"/>
+        <div style="margin-top: 5px; margin-left: 104px;">
+            <input type="color" id="node-input-color4" class="series-color"/>
+            <input type="color" id="node-input-color5" class="series-color"/>
+            <input type="color" id="node-input-color6" class="series-color"/>
+        </div>
+        <div style="margin-top: 5px; margin-left: 104px;">
+            <input type="color" id="node-input-color7" class="series-color"/>
+            <input type="color" id="node-input-color8" class="series-color"/>
+            <input type="color" id="node-input-color9" class="series-color"/>
+        </div>
     </div>
     <div class="form-row">
         <label for="node-input-nodata">Blank label</label>

@@ -5,8 +5,10 @@ icon.jpg
 icon.png
 index.html
 css/app.min.css
+css/app.min.less
+css/index.html
 js/app.min.js
-js/tinycolor.js
+js/tinycolor-min.js
 fonts/FontAwesome.otf
 fonts/fontawesome-webfont.eot
 fonts/fontawesome-webfont.svg
@@ -17,4 +19,4 @@ fonts/fontawesome-webfont.woff2
 NETWORK:
 *
 
-# hash: 506a1f05e1e822d7a908de7601e5ddbde1656c7f1bb82487e38892616bc3bc7d
+# hash: 340f5176b626acbf4536d805a2e84321761f97dee6f47f0f72b4b4ee74239da9

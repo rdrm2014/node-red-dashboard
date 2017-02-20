@@ -15,7 +15,9 @@ module.exports = function(RED) {
         toNumber: toNumber.bind(null, false),
         toFloat: toNumber.bind(null, true),
         updateUi: updateUi,
-        ev: ev
+        ev: ev,
+        getTheme: getTheme,
+        getSizes: getSizes
     };
 };
 
@@ -26,10 +28,7 @@ var serveStatic = require('serve-static'),
     events = require('events'),
     dashboardVersion = require('./package.json').version;
 
-var baseConfiguration = {
-    title: "Node-RED Dashboard",
-    theme: "theme-light"
-};
+var baseConfiguration = {};
 
 var tabs = [];
 var links = [];
@@ -122,6 +121,9 @@ function add(opt) {
             state.disabled = !msg.enabled;
             io.emit(updateValueEventName, state);
         }
+        // remove res and req as they are often circular
+        if (msg.hasOwnProperty("res")) { delete msg.res; }
+        if (msg.hasOwnProperty("req")) { delete msg.req; }
 
         // Retrieve the dataset for this node
         var oldValue = currentValues[opt.node.id];
@@ -136,7 +138,8 @@ function add(opt) {
         if ((typeof(conversion) === 'object') && (conversion.update !== undefined)) {
             newPoint = conversion.newPoint;
             fullDataset = conversion.updatedValues;
-        } else {
+        }
+        else {
             // If no update flag is set, this means the conversion contains
             // the full dataset or the new value (e.g. gauges)
             fullDataset = conversion;
@@ -148,15 +151,13 @@ function add(opt) {
 
             // Determine what to emit over the websocket
             // (the new point or the full dataset).
-            var toEmit;
-            if (newPoint !== undefined) {
-                toEmit = opt.beforeEmit(msg, newPoint);
-            } else {
-                toEmit = opt.beforeEmit(msg, fullDataset);
-            }
 
             // Always store the full dataset.
             var toStore = opt.beforeEmit(msg, fullDataset);
+            var toEmit;
+            if (newPoint !== undefined) { toEmit = opt.beforeEmit(msg, newPoint); }
+            else { toEmit = toStore; }
+
             toEmit.id = toStore.id = opt.node.id;
 
             // Emit and Store the data
@@ -167,9 +168,6 @@ function add(opt) {
             if (opt.forwardInputMessages && opt.node._wireCount) {
                 msg.payload = opt.convertBack(fullDataset);
                 msg = opt.beforeSend(msg) || msg;
-                //console.log("MSG1",msg);
-                //opt.beforeSend(msg);
-                //console.log("MSG2",msg);
                 opt.node.send(msg);
             }
         }
@@ -225,9 +223,10 @@ function init(server, app, log, redSettings) {
 
     fs.stat(path.join(__dirname, 'dist/index.html'), function(err, stat) {
         if (!err) {
-            app.use(join(settings.path), serveStatic(path.join(__dirname, "dist")));
-        } else {
-            log.info("Using development folder");
+            app.use( join(settings.path), serveStatic(path.join(__dirname, "dist")) );
+        }
+        else {
+            log.info("Dashboard using development folder");
             app.use(join(settings.path), serveStatic(path.join(__dirname, "src")));
             var vendor_packages = [
                 'angular', 'angular-sanitize', 'angular-animate', 'angular-aria', 'angular-material',
@@ -236,7 +235,7 @@ function init(server, app, log, redSettings) {
                 'jquery', 'jquery-ui',
                 'd3', 'raphael', 'justgage',
                 'angular-chart.js', 'chart.js', 'moment',
-                'angularjs-color-picker', 'tinycolor2'
+                'angularjs-color-picker', 'tinycolor2', 'less'
             ];
             vendor_packages.forEach(function (packageName) {
                 app.use(join(settings.path, 'vendor', packageName), serveStatic(path.join(__dirname, 'node_modules', packageName)));
@@ -249,8 +248,8 @@ function init(server, app, log, redSettings) {
     io.on('connection', function(socket) {
         ev.emit("newsocket", socket.client.id, socket.request.connection.remoteAddress);
         updateUi(socket);
-        socket.on(updateValueEventName, ev.emit.bind(ev, updateValueEventName));
 
+        socket.on(updateValueEventName, ev.emit.bind(ev, updateValueEventName));
         socket.on('ui-replay-state', function() {
             var ids = Object.getOwnPropertyNames(replayMessages);
             ids.forEach(function (id) {
@@ -279,7 +278,7 @@ function updateUi(to) {
             l.theme = baseConfiguration.theme;
         });
         to.emit('ui-controls', {
-            title: baseConfiguration.title,
+            site: baseConfiguration.site,
             theme: baseConfiguration.theme,
             tabs: tabs,
             links: links
@@ -299,7 +298,8 @@ function find(array, predicate) {
 function itemSorter(item1, item2) {
     if (item1.order === 0 && item2.order !== 0) {
         return 1;
-    } else if (item1.order !== 0 && item2.order === 0) {
+    }
+    else if (item1.order !== 0 && item2.order === 0) {
         return -1;
     }
     return item1.order - item2.order;
@@ -386,8 +386,25 @@ function addLink(name, link, icon, order, target) {
     }
 }
 
-function addBaseConfig(title,theme) {
-    if (title) { baseConfiguration.title = title; }
-    if (theme) { baseConfiguration.theme = theme; }
+function addBaseConfig(config) {
+    if (config) { baseConfiguration = config; }
     updateUi();
+}
+
+function getTheme() {
+    if (baseConfiguration && baseConfiguration.hasOwnProperty("theme") && (typeof baseConfiguration.theme !== "undefined") ) {
+        return baseConfiguration.theme.themeState;
+    }
+    else {
+        return undefined;
+    }
+}
+
+function getSizes() {
+    if (baseConfiguration && baseConfiguration.hasOwnProperty("site") && (typeof baseConfiguration.site !== "undefined") && baseConfiguration.site.hasOwnProperty("sizes")) {
+        return baseConfiguration.site.sizes;
+    }
+    else {
+        return { sx:48, sy:48, gx:6, gy:6, cx:6, cy:6, px:0, py:0 };
+    }
 }

@@ -89,7 +89,7 @@ function loadConfiguration(type,scope) {
     var legend = scope.$eval('me.item.legend');
     var interpolate = scope.$eval('me.item.interpolate');
     var xFormat = scope.$eval('me.item.xformat');
-    var baseColours = ['#1F77B4', '#AEC7E8', '#FF7F0E', '#2CA02C', '#98DF8A', '#D62728', '#FF9896', '#9467BD', '#C5B0D5'];
+    var baseColours = scope.$eval('me.item.colors') || ['#1F77B4', '#AEC7E8', '#FF7F0E', '#2CA02C', '#98DF8A', '#D62728', '#FF9896', '#9467BD', '#C5B0D5'];
     var config = {};
     config.data = [];
     config.series = [];
@@ -191,6 +191,7 @@ function loadConfiguration(type,scope) {
         if (isNaN(yMin)) { yMin = 0; }
     }
 
+    var themeState = scope.$eval('me.item.theme.themeState');
     // Configure scales
     if (type !== 'pie') {
         config.options.scales.yAxes = [{}];
@@ -211,20 +212,15 @@ function loadConfiguration(type,scope) {
         }
 
         // Theme settings
-        if (scope.$eval('me.item.theme') === 'theme-dark') {
-            config.options.scales.xAxes[0].ticks.fontColor = config.options.scales.yAxes[0].ticks.fontColor = "#fff";
-            config.options.scales.xAxes[0].gridLines = config.options.scales.yAxes[0].gridLines = {
-                color:"rgba(255,255,255,0.1)",
-                zeroLineColor:"rgba(255,255,255,0.1)"
-            }
+        config.options.scales.xAxes[0].ticks.fontColor = config.options.scales.yAxes[0].ticks.fontColor = themeState['widget-textColor'].value;
+        var gridColor = tinycolor(themeState['widget-textColor'].value).toRgb();
+        var gridlineColour = "rgba("+gridColor.r+","+gridColor.g+","+gridColor.b+",0.1)";
+
+        config.options.scales.xAxes[0].gridLines = config.options.scales.yAxes[0].gridLines = {
+            color: gridlineColour,
+            zeroLineColor: gridlineColour
         }
-        else {
-            config.options.scales.xAxes[0].ticks.fontColor = config.options.scales.yAxes[0].ticks.fontColor = "#666";
-            config.options.scales.xAxes[0].gridLines = config.options.scales.yAxes[0].gridLines = {
-                color:"rgba(0,0,0,0.1)",
-                zeroLineColor:"rgba(0,0,0,0.1)"
-            }
-        }
+
         // Ensure scale labels do not rotate
         config.options.scales.xAxes[0].ticks.maxRotation = 0;
         config.options.scales.xAxes[0].ticks.autoSkipPadding = 4;
@@ -234,19 +230,17 @@ function loadConfiguration(type,scope) {
         //Pie chart
         config.colours = baseColours;
     }
-
+ 
     // Configure legend
     if (type !== 'bar' && type !== 'horizontalBar' && JSON.parse(legend)) {
         config.options.legend = { display: true };
         if (type === 'pie') {
             config.options.legend.position = 'left';
         }
-        if (scope.$eval('me.item.theme') === 'theme-dark') {
-            config.options.legend.labels = { fontColor:"#fff" };
-        }
-        else {
-            config.options.legend.labels = {fontColor:"#666"};
-        }
+
+        //set colours based on widget text colour
+        var themeStat = scope.$eval('me.item.theme.themeState');
+        config.options.legend.labels = { fontColor:themeStat['widget-textColor'].value };
     }
     return config;
 }

@@ -1,10 +1,37 @@
 
-### 2.2.2: Maintenance Release - not yet on npm
+### 2.3.3: Maintenance Release
+
+**Fixes**
+
+ - Fix saving of named custom themes
+
+### 2.3.2: Maintenance Release
+
+**Fixes**
+
+ - Stop light and dark colour reset icon repeating on tab changes
+ - Let colour helper library load from editor side
+ - Better height detection (or lack of) for template nodes
+ - Catch ui_gauge initialisation errors
+
+### 2.3.1: Maintenance Release
+
+**Fixes**
+
+ - Fix gauge initialisation for upgrading dashboard version
+
+### 2.3.0: Milestone Release
 
 **Enhancements**
 
- - Colourpicker - add configurable lightness slider PR123
+ - Add Themes to Dashboard Tab - includes colour and sizes and other options - Issue137
+ - Colour-picker - add configurable lightness slider - PR123
  - Configurable colour for Notification toasts - Issue145
+ - Remove whitespace from above gauge with no label  - Issue159
+ - Let gauge widgets scall larger when basic unit size increased - Issue162
+ - Let most labels show icons if required (via html <i syntax)
+ - Add date-picker widget - Issue14
+ - Give audio node option to play when not in focus - Issue167
 
 **Fixes**
 
@@ -13,6 +40,11 @@
  - chart no longer emits a blank array on start (which was wiping out file storage of data)
  - link tabs were stuck at light theme - now follow overall theme correctly - Issue149
  - fixed numeric widget to not have rounding error, and also occasional stall/hang - Issue150
+ - fixed numeric widget not starting at min value - Issue163
+ - dashboard root path re-write from UI now working
+ - remove .res and .req properties of msg in case they have circular refs - Issue153
+ - make dropdown widget arrow, chart gridlines, match theme
+ - remove .req and .res properties to remove problems with circular references
 
 ### 2.2.1: Maintenance Release
 

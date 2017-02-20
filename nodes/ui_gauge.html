@@ -1,3 +1,12 @@
+<style>
+    input.gauge-color {
+        width: 100px;
+        text-align: center;
+    }
+    input.gauge-color::-webkit-color-swatch {
+        border: none;
+    }
+</style>
 <script type="text/javascript">
     RED.nodes.registerType('ui_gauge',{
         category: 'dashboard',
@@ -7,8 +16,8 @@
             group: {type: 'ui_group', required: true},
             order: {value: 0},
             width: {value: 0, validate: function(v) {
-                    var width = v||0;
-                    var currentGroup = $('#node-input-group').val()||this.group;
+                    var width = v || 0;
+                    var currentGroup = $('#node-input-group').val() || this.group;
                     var groupNode = RED.nodes.node(currentGroup);
                     var valid = !groupNode || +width <= +groupNode.width;
                     $("#node-input-size").toggleClass("input-error",!valid);
@@ -29,17 +38,32 @@
         align: "right",
         icon: "ui_gauge.png",
         paletteLabel: 'gauge',
-        label: function() { return this.name || this.label || 'gauge'; },
+        label: function() { return this.name || this.title || 'gauge'; },
         oneditprepare: function() {
+            var setColour = function(id, value) {
+                $(id).val(value);
+                $(id).css("background-color", value);
+                var rgb = tinycolor(value).toRgb();
+                var level = ((rgb.r*299) + (rgb.g*587) + (rgb.b*114))/1000;
+                var textColor = (level >= 128) ? '#111111' : '#eeeeee';
+                $(id).css("color", textColor);
+            }
+            $(".gauge-color").change(function() {
+                setColour("#"+$(this).attr("id"), $(this).val());
+            });
+
+            var defaultColors = ['#00B500', '#E6E600', '#CA3838'];
+
             if (this.colors) {
-                $("#node-input-color1").val(this.colors[0] || "#00B500");
-                $("#node-input-color2").val(this.colors[1] || "#E6E600");
-                $("#node-input-color3").val(this.colors[2] || "#CA3838");
+                for (var i=0; i<this.colors.length; i++) {
+                    var value = this.colors[i] || defaultColors[i];
+                    setColour("#node-input-color"+(i+1), value);
+                }
             }
             else {
-                $("#node-input-color1").val("#00B500");
-                $("#node-input-color2").val("#E6E600");
-                $("#node-input-color3").val("#CA3838");
+                for (var i=0; i<defaultColors.length; i++) {
+                    setColour("#node-input-color"+(i+1), defaultColors[i]);
+                }
             }
             if (this.gtype === undefined) {
                 this.gtype = "gage";
@@ -91,7 +115,7 @@
     </div>
     <div id="ui-gauge-labels">
         <div class="form-row">
-            <label for="node-input-title"><i class="fa fa-i-cursor"></i> Title</label>
+            <label for="node-input-title"><i class="fa fa-i-cursor"></i> Label</label>
             <input type="text" id="node-input-title">
         </div>
         <div class="form-row">
@@ -99,7 +123,7 @@
             <input type="text" id="node-input-format" placeholder="{{value}}">
         </div>
         <div class="form-row">
-            <label for="node-input-label"><i class="fa fa-i-cursor"></i> Label</label>
+            <label for="node-input-label"><i class="fa fa-i-cursor"></i> Units</label>
             <input type="text" id="node-input-label" placeholder="optional sub-label">
         </div>
     </div>
@@ -112,9 +136,9 @@
     </div>
     <div class="form-row" id="ui-gauge-colours">
         <label for="node-input-color1">Colour gradient</label>
-        <input type="color" id="node-input-color1" style="width:100px"/>
-        <input type="color" id="node-input-color2" style="width:100px"/>
-        <input type="color" id="node-input-color3" style="width:100px"/>
+        <input type="color" id="node-input-color1" class="gauge-color"/>
+        <input type="color" id="node-input-color2" class="gauge-color"/>
+        <input type="color" id="node-input-color3" class="gauge-color"/>
     </div>
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>

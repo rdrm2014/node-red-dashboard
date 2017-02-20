@@ -1,6 +1,6 @@
 {
 	"name": "node-red-dashboard",
-	"version": "2.2.2-beta",
+	"version": "2.3.3",
 	"description": "A set of dashboard nodes for Node-RED",
 	"keywords": [
 		"node-red"
@@ -15,7 +15,7 @@
 		{"name": "Joe Pavitt"},
 		{"name": "Nick O'Leary"},
 		{"name": "Dan Cunnington"},
-        {"name": "Laurence Stant"}
+    {"name": "Laurence Stant"}
 	],
 	"license": "Apache-2.0",
 	"repository": {
@@ -32,6 +32,7 @@
       "ui_slider": "nodes/ui_slider.js",
       "ui_numeric": "nodes/ui_numeric.js",
       "ui_text_input": "nodes/ui_text_input.js",
+      "ui_date_picker": "nodes/ui_date_picker.js",
       "ui_colour_picker": "nodes/ui_colour_picker.js",
       "ui_form": "nodes/ui_form.js",
       "ui_text": "nodes/ui_text.js",
@@ -74,14 +75,18 @@
     "gulp-html-src": "^1.0.0",
     "gulp-htmlmin": "^3.0.0",
     "gulp-if": "^2.0.0",
+    "gulp-insert-lines": "0.0.4",
     "gulp-jscs": "^4.0.0",
     "gulp-jshint": "^2.0.1",
     "gulp-manifest": "^0.1.1",
+    "gulp-remove-html": "^1.3.0",
+    "gulp-resources": "^0.5.0",
     "gulp-uglify": "^2.0.0",
     "gulp-util": "^3.0.8",
     "jquery": "^2.2.4",
     "jshint": "^2.9.2",
     "justgage": "^1.1.0",
+    "less": "^2.7.1",
     "moment": "^2.17.0",
     "sprintf-js": "^1.0.3",
     "streamqueue": "^1.1.1",

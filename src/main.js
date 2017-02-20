@@ -1,24 +1,37 @@
 
 var app = angular.module('ui', ['ngMaterial', 'ngMdIcons', 'ngSanitize', 'sprintf', 'chart.js', 'color.picker']);
 
-app.config(['$mdThemingProvider', '$compileProvider',
-    function ($mdThemingProvider, $compileProvider) {
-        /*$mdThemingProvider.theme('default')
-            .primaryPalette('light-green')
-            .accentPalette('red');*/
+var dateFormat = "DD/MM/YYYY";  /// my choice - because I said so.
+
+app.config(['$mdThemingProvider', '$compileProvider', '$mdDateLocaleProvider',
+    function ($mdThemingProvider, $compileProvider, $mdDateLocaleProvider) {
+        // $mdThemingProvider.theme('default')
+        //     .primaryPalette('light-green')
+        //     .accentPalette('red');
+
         //white-list all protocols
         $compileProvider.aHrefSanitizationWhitelist(/.*/);
-    }]);
+
+        $mdDateLocaleProvider.formatDate = function(date) {
+            return date ? moment(date).format(dateFormat) : null;
+        };
+        $mdDateLocaleProvider.parseDate = function(dateString) {
+            var m = moment(dateString, dateFormat, true);
+            return m.isValid() ? m.toDate() : new Date(NaN);
+        };
+    }
+]);
 
 app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$location', '$document', '$mdToast', '$mdDialog', '$rootScope', '$sce', '$timeout', '$scope',
     function ($mdSidenav, $window, events, $location, $document, $mdToast, $mdDialog, $rootScope, $sce, $timeout, $scope) {
-        var main = this;
-
         this.tabs = [];
         this.links = [];
         this.len = 0;
         this.selectedTab = null;
         this.loaded = false;
+        this.hideToolbar = false;
+        this.allowSwipe = false;
+        var main = this;
 
         function moveTab(d) {
             var len = main.tabs.length;
@@ -30,21 +43,17 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
             }
         }
 
-        //TODO Disabled until we make it an option - too sensitive for some
-        //$scope.onSwipeLeft = function(ev) { moveTab(-1); }
-        //$scope.onSwipeRight = function(ev) { moveTab(1); }
+        $scope.onSwipeLeft = function() { if (main.allowSwipe) { moveTab(-1); } }
+        $scope.onSwipeRight = function() { if (main.allowSwipe) { moveTab(1); } }
 
-        this.toggleSidenav = function () {
-            $mdSidenav('left').toggle();
-        };
+        this.toggleSidenav = function () { $mdSidenav('left').toggle(); }
 
         this.select = function (index) {
             main.selectedTab = main.tabs[index];
             if (main.tabs.length > 0) { $mdSidenav('left').close(); }
             events.emit('ui-replay-state', {});
             $location.path(index);
-
-        };
+        }
 
         this.open = function (link, index) {
             // console.log("LINK",link,index);
@@ -60,26 +69,69 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
                 main.selectedTab = main.links[index];
             }
             $mdSidenav('left').close();
-        };
+        }
+
+        function applyStyle(theme) {
+            // less needs a corresponding css variable for each style
+            // in camel case. e.g. 'page-backgroundColor' -> '@pageBackgroundColor'
+            var configurableStyles = Object.keys(theme.themeState);
+            var lessObj = {};
+
+            for (var i=0; i<configurableStyles.length; i++) {
+                //remove dash and camel case
+                var arr = configurableStyles[i].split('-');
+                for (var j=1; j<arr.length; j++) {
+                    arr[j] = arr[j].charAt(0).toUpperCase() + arr[j].slice(1);
+                }
+                var lessVariable = arr.join("");
+                var colour = theme.themeState[configurableStyles[i]].value;
+                lessObj["@"+lessVariable] = colour;
+            }
+            less.modifyVars(lessObj);
+        }
 
         events.connect(function (ui, done) {
             main.tabs = ui.tabs;
             main.links = ui.links;
-            $document[0].title = ui.title;
+            var name;
+            if (ui.site) {
+                name = ui.site.name;
+                main.hideToolbar = (ui.site.hideToolbar == "true");
+                main.allowSwipe = (ui.site.allowSwipe == "true");
+                dateFormat = ui.site.dateFormat || dateFormat;
+                if (ui.site.hasOwnProperty("sizes")) {
+                    sizes.setSizes(ui.site.sizes);
+                    main.sizes = ui.site.sizes;
+                }
+            }
+            if (ui.title) { name = ui.title }
+            $document[0].title = name || "Node-RED Dashboard";
             $document[0].theme = ui.theme;
 
             var prevTabIndex = parseInt($location.path().substr(1));
+            var finishLoading = function() {
+                if (main.selectedTab && typeof(main.selectedTab.theme) === 'object') {
+                    applyStyle(main.selectedTab.theme);
+                    $mdToast.hide();
+                    done();
+                }
+                else if (typeof(ui.theme) === 'object' && ui.theme.themeState['base-color'].value) {
+                    applyStyle(ui.theme);
+                }
+            }
             if (!isNaN(prevTabIndex) && prevTabIndex < main.tabs.length) {
                 main.selectedTab = main.tabs[prevTabIndex];
+                finishLoading();
             }
             else {
-                $timeout( function() { main.select(0); }, 50 );
+                $timeout( function() {
+                    main.select(0);
+                    finishLoading();
+                }, 50 );
             }
-            $mdToast.hide();
-            done();
+            main.len = main.tabs.length + main.links.length;
         }, function () {
             main.loaded = true;
-            main.len = main.tabs.length + main.links.length;
         });
 
         function findControl(id, items) {
@@ -95,10 +147,8 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
 
         events.on(function (msg) {
             var found = findControl(msg.id, main.tabs);
-
             if (found === undefined) { return; }
             for (var key in msg) {
-
                 if (msg.hasOwnProperty(key)) {
                     if (key === 'id') { continue; }
                     found[key] = msg[key];
@@ -191,12 +241,14 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
         });
 
         events.on('ui-audio', function(msg) {
-            var totab;
-            for (var i in main.tabs) {
-                if (msg.tabname === main.tabs[i].header) { totab = i; }
+            if (!msg.always) {
+                var totab;
+                for (var i in main.tabs) {
+                    if (msg.tabname === main.tabs[i].header) { totab = i; }
+                }
+                // only play sound/tts to tab if in focus
+                if (totab != parseInt($location.path().substr(1))) { return; }
             }
-            // only play sound/tts to tab if in focus
-            if (totab != parseInt($location.path().substr(1))) { return; }
 
             if (msg.hasOwnProperty("tts")) {
                 if ('speechSynthesis' in window) {
