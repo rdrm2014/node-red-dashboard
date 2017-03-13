@@ -1,5 +1,5 @@
 
-var app = angular.module('ui', ['ngMaterial', 'ngMdIcons', 'ngSanitize', 'sprintf', 'chart.js', 'color.picker']);
+var app = angular.module('ui',['ngMaterial', 'ngMdIcons', 'ngSanitize', 'ngTouch', 'sprintf', 'chart.js', 'color.picker']);
 
 var dateFormat = "DD/MM/YYYY";  /// my choice - because I said so.
 
@@ -35,8 +35,8 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
 
         function moveTab(d) {
             var len = main.tabs.length;
-            var i = parseInt($location.path().substr(1));
             if (len > 1) {
+                var i = parseInt($location.path().substr(1));
                 i = (i + d) % len;
                 if (i < 0) { i += len; }
                 main.select(i);
@@ -104,20 +104,22 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
                     main.sizes = ui.site.sizes;
                 }
             }
+            $document[0].theme = ui.theme;
             if (ui.title) { name = ui.title }
             $document[0].title = name || "Node-RED Dashboard";
-            $document[0].theme = ui.theme;
+            $('meta[name=apple-mobile-web-app-title]').attr('content', name || "Node-RED");
 
             var prevTabIndex = parseInt($location.path().substr(1));
             var finishLoading = function() {
                 if (main.selectedTab && typeof(main.selectedTab.theme) === 'object') {
+                    main.selectedTab.theme.themeState["widget-borderColor"] = main.selectedTab.theme.themeState["widget-borderColor"] || main.selectedTab.theme.themeState["group-backgroundColor"];
                     applyStyle(main.selectedTab.theme);
                     $mdToast.hide();
-                    done();
                 }
                 else if (typeof(ui.theme) === 'object' && ui.theme.themeState['base-color'].value) {
                     applyStyle(ui.theme);
                 }
+                done();
             }
             if (!isNaN(prevTabIndex) && prevTabIndex < main.tabs.length) {
                 main.selectedTab = main.tabs[prevTabIndex];
@@ -127,7 +129,7 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
                 $timeout( function() {
                     main.select(0);
                     finishLoading();
-                }, 50 );
+                }, 50);
             }
             main.len = main.tabs.length + main.links.length;
         }, function () {
@@ -161,7 +163,7 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
 
         events.on('disconnect', function(m) {
             $mdToast.show({
-                template: '<md-toast><div class="md-toast-error"><i class="fa fa-plug"></i>&nbsp; Connection lost</div></md-toast>',
+                template: '<md-toast><div class="md-toast-error">&#x2718; &nbsp; Connection lost</div></md-toast>',
                 position: 'top right',
                 hideDelay: 6000000
             });
@@ -214,6 +216,7 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
             if (msg.hasOwnProperty("socketid") && (msg.socketid !== events.id) ) { return; }
             if (msg.hasOwnProperty("tab")) { // if it's a request to change tabs
                 if (typeof msg.tab === 'string') {
+                    if (msg.tab === "") { events.emit('ui-refresh', {}); }
                     // is it the name of a tab ?
                     for (var i in main.tabs) {
                         if (msg.tab == main.tabs[i].header) {
@@ -249,7 +252,6 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
                 // only play sound/tts to tab if in focus
                 if (totab != parseInt($location.path().substr(1))) { return; }
             }
-
             if (msg.hasOwnProperty("tts")) {
                 if ('speechSynthesis' in window) {
                     var voices = window.speechSynthesis.getVoices();

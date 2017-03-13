@@ -21,10 +21,8 @@ angular.module('ui').controller('uiCardPanelController', ['uiSizes', '$timeout',
             $timeout(function() {
                 refreshSizes();
                 refreshInProgress = false;
-                if (done) {
-                    done();
-                }
-            }, 0);
+                if (done) { done(); }
+            }, 10);
         };
 
         var rows;
@@ -41,13 +39,14 @@ angular.module('ui').controller('uiCardPanelController', ['uiSizes', '$timeout',
                     // - child.height() defaults to calculating based on width of group
                     var ch = child.height() * parseInt($scope.group.header.config.width)/width;
                     if (!ch || (ch <= 0)) { // if height is 0 or undefined
+                        ch = 0;
                         var t = (child[0].innerHTML).toLowerCase();
-                        if ((t.indexOf('<style') === -1) && (t.indexOf('<link') === -1)) { ch = 1; } // and if no style or link tag
-                        else {                                      // or if any common tags for content
-                            if (t.indexOf('<div') !== -1) { ch = 1; }
-                            if (t.indexOf('<p') !== -1) { ch = 1; }
-                            if (t.indexOf('<span') !== -1) { ch = 1; }
-                        }
+                        if (t.indexOf('<div') !== -1) { ch = 1; }
+                        if (t.indexOf('<p') !== -1) { ch = 1; }
+                        if (t.indexOf('<span') !== -1) { ch = 1; }
+                        if (t.indexOf('<b') !== -1) { ch = 1; }
+                        if (t.indexOf('<h') !== -1) { ch = 1; }
+                        if (t.indexOf('<f') !== -1) { ch = 1; }
                     }
                     height = Math.ceil(ch / (sizes.cy + sizes.sy));
                 }
@@ -59,7 +58,9 @@ angular.module('ui').controller('uiCardPanelController', ['uiSizes', '$timeout',
                     width: sizes.sx * width + sizes.cx * (width-1),
                     height: sizes.sy * height + sizes.cy * (height-1)
                 });
-                child.addClass('visible');
+                if (height !== 0) {
+                    child.addClass('visible');
+                }
             });
             ctrl.height = rows.length ?
                 sizes.py * 2 + rows.length * sizes.sy + (rows.length - 1) * sizes.cy :
@@ -76,8 +77,8 @@ angular.module('ui').controller('uiCardPanelController', ['uiSizes', '$timeout',
 
         function getFreeAndOccupy(width, height) {
             var maxx = sizes.columns($scope.group) - width;
-            for (var y=0;y<1000;y++) {
-                for (var x=0;x<=maxx;x++) {
+            for (var y=0; y<1000; y++) {
+                for (var x=0; x<=maxx; x++) {
                     if (isFree(x, y, width, height)) {
                         occupy(x,y,width,height);
                         return {x:x, y:y};
@@ -99,12 +100,12 @@ angular.module('ui').controller('uiCardPanelController', ['uiSizes', '$timeout',
         }
 
         function isFree(x, y, width, height) {
-            for (var dy=0;dy<height; dy++) {
+            for (var dy=0; dy<height; dy++) {
                 var row = rows[y+dy];
                 if (!row) {
                     break;
                 }
-                for (var dx=0;dx<width;dx++) {
+                for (var dx=0; dx<width; dx++) {
                     if (row[x+dx]) {
                         return false;
                     }

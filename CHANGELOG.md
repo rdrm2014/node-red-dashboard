@@ -1,9 +1,51 @@
 
+### 2.3.6-beta: Maintenance Release - (Not on NPM)
+
+**Enhancements**
+
+ - sending tab change of "" to ui_control refreshes current page
+ - let button widget pass messages (or be triggered by input)
+ - enhance gulp, jshint and jscs checks
+ - Hide page <title> until actually settings
+
+ **Fixes**
+
+  - stop numeric widget emitting on accidental mouseover
+  - text input will now send it's payload on losing focus as well as enter (if in enter mode)
+  - fix form colours to be more dynamic to match theme, Issue#186
+
+### 2.3.5: Maintenance Release
+
+**Fixes**
+
+ - let numeric (and slider) widget accept floating point presets if step set appropriately Issue#185
+ - initialises OK if absolutely no theme present from old flow
+ - knock the corners off homescreen icon
+
+### 2.3.4: Maintenance Release
+
+**Enhancements**
+
+ - Add IOS homescreen icon link - PR#176
+ - Let datepicker accept timestamp input to preset date.
+ - Don't react to swipe in charts, or slider
+
+**Fixes**
+
+ - move to ngTouch rather than mdTouch to fix swipe/scroll Issue#164
+ - correct data output format from bar chart type chart - fixes Issue#181
+ - prevent button forwarding input messages as it makes no sense. - PR#170
+ - correct select box example - PR#182
+ - fix compass colour to be set by custom widget colour
+ - centre icon in button widget
+
 ### 2.3.3: Maintenance Release
 
 **Fixes**
 
  - Fix saving of named custom themes
+ - Fix dashboard link icon not appearing for FF and Safari
+ - Default old text colours so they are visible
 
 ### 2.3.2: Maintenance Release
 

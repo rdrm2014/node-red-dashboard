@@ -22,13 +22,16 @@ var
     jshint = require('gulp-jshint'),
     jscs = require('gulp-jscs');
 
-gulp.task('default', ['manifest']);
+//gulp.task('default', ['manifest']);
+gulp.task('default', ['lint','jscs'], function() {
+    gulp.start('manifest');
+});
 
 gulp.task('build', ['icon', 'js', 'css', 'less', 'index', 'fonts']);
 
-gulp.task('publish', ['build'], function (done) {
-    spawn('npm', ['publish'], { stdio:'inherit' }).on('close', done);
-});
+// gulp.task('publish', ['build'], function (done) {
+//     spawn('npm', ['publish'], { stdio:'inherit' }).on('close', done);
+// });
 
 gulp.task('manifest', ['build'], function() {
     gulp.src(['dist/*','dist/css/*','dist/js/*','dist/fonts/*'], { base: 'dist/' })
@@ -53,7 +56,8 @@ gulp.task('lint', function() {
 gulp.task('jscs', function() {
     return gulp.src(['*.js','nodes/*.js','src/*.js','src/*/*.js','src/*/*/*.js'])
         .pipe(jscs())
-        .pipe(jscs.reporter());
+        //.pipe(jscs({fix: true}))
+        .pipe(jscs.reporter("inline"))
 });
 
 gulp.task('index', function() {
@@ -75,7 +79,7 @@ gulp.task('index', function() {
 });
 
 gulp.task('icon', function() {
-    gulp.src('src/icon.jpg').pipe(gulp.dest('dist/'));
+    gulp.src('src/icon192.png').pipe(gulp.dest('dist/'));
     return gulp.src('src/icon.png').pipe(gulp.dest('dist/'));
 });
 
@@ -103,8 +107,8 @@ gulp.task('js', function () {
 
 gulp.task('css', function () {
     return gulp.src('src/index.html')
-    .pipe(ghtmlSrc({getFileName: getFileName.bind(this, 'href'), presets: 'css'}))
-    .pipe(minifyCss({compatibility: 'ie8'}))
+    .pipe(ghtmlSrc({getFileName:getFileName.bind(this, 'href'), presets:'css'}))
+    .pipe(minifyCss({compatibility:'ie8'}))
     .pipe(concat('app.min.css'))
     .pipe(header(fs.readFileSync('license.js')))
     .pipe(gulp.dest('dist/css/'));
@@ -112,7 +116,7 @@ gulp.task('css', function () {
 
 gulp.task('less', function() {
     return gulp.src('src/index.html')
-    .pipe(resources({less: true, css: false, js: false}))
+    .pipe(resources({less:true, css:false, js:false}))
     .pipe(removeHtml())
     .pipe(gulpif('**/*.less', concat('app.min.less')))
     .pipe(header(fs.readFileSync('license.js')))

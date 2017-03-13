@@ -50,7 +50,7 @@ angular.module('ui').controller('uiComponentController', ['$scope', 'UiEvents', 
                     };
 
                     var range = me.item.max - me.item.min;
-                    var promise;
+                    var promise = null;
                     me.periodicChange = function (delta) {
                         changeValue(delta);
                         var i = 0;
@@ -65,8 +65,11 @@ angular.module('ui').controller('uiComponentController', ['$scope', 'UiEvents', 
                         }, 100);
                     };
                     me.stopPeriodic = function () {
-                        $interval.cancel(promise);
-                        me.valueChanged(0);
+                        if (promise) {
+                            $interval.cancel(promise);
+                            promise = null;
+                            me.valueChanged(0);
+                        }
                     };
                     break;
                 }
@@ -120,8 +123,13 @@ angular.module('ui').controller('uiComponentController', ['$scope', 'UiEvents', 
                 }
 
                 case 'date-picker': {
+                    if (me.item.ddd !== undefined) {
+                        var b = me.item.ddd.split(/\D+/);
+                        me.item.ddd = new Date(Date.UTC(b[0], --b[1], b[2], b[3], b[4], b[5], b[6]));
+                    }
                     me.processInput = function (msg) {
                         msg.value = new Date(msg.value);
+                        me.item.ddd = msg.value;
                     };
                     me.setDate = function () {
                         me.item.value = me.item.ddd;
@@ -160,13 +168,12 @@ angular.module('ui').controller('uiComponentController', ['$scope', 'UiEvents', 
         }
 
         me.valueChanged = function (throttleTime) {
-            throttle({ id: me.item.id, value: me.item.value },
+            throttle({ id:me.item.id, value:me.item.value },
                 typeof throttleTime === "number" ? throttleTime : 10);
         };
 
         // will emit me.item.value when enter is pressed
         me.keyPressed = function (event) {
-            console.log("EV",event);
             if ((event.charCode === 13) || (event.which === 13)) {
                 events.emit({ id:me.item.id, value:me.item.value });
             }

@@ -9,16 +9,7 @@ module.exports = function(RED) {
         if (!group) { return; }
         var tab = RED.nodes.getNode(group.config.tab);
         if (!tab) { return; }
-
         var hei = Number(config.height|| 0);
-        if (hei === 0) {    // and if no style or link tag
-            if ((config.format.indexOf('<style') === -1) && (config.format.indexOf('<link') === -1)) { hei = 1; }
-            else {          // or if any common tags for content
-                if (config.format.indexOf('<div') !== -1) { hei = 1; }
-                if (config.format.indexOf('<p') !== -1) { hei = 1; }
-                if (config.format.indexOf('<span') !== -1) { hei = 1; }
-            }
-        }
 
         var done = ui.add({
             forwardInputMessages: config.fwdInMessages,

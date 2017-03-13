@@ -44,10 +44,12 @@ ev.setMaxListeners(0);
 var settings = {};
 
 function toNumber(keepDecimals, config, input) {
-    if (typeof input === "number") { return input; }
-    var inputString = input.toString();
-    var nr = keepDecimals ? parseFloat(inputString) : parseInt(inputString);
-    return isNaN(nr) ? config.min : nr;
+    if (typeof input !== "number") {
+        var inputString = input.toString();
+        input = keepDecimals ? parseFloat(inputString) : parseInt(inputString);
+    }
+    if (config.step) { input = Math.round(Math.round(input/config.step)*config.step*10000)/10000; }
+    return isNaN(input) ? config.min : input;
 }
 
 function emit(event, data) {
@@ -213,7 +215,6 @@ function join() {
 function init(server, app, log, redSettings) {
     var uiSettings = redSettings.ui || {};
     settings.path = uiSettings.path || 'ui';
-    settings.title = uiSettings.title || 'Node-RED Dashboard';
     settings.defaultGroupHeader = uiSettings.defaultGroup || 'Default';
 
     var fullPath = join(redSettings.httpNodeRoot, settings.path);
@@ -256,6 +257,9 @@ function init(server, app, log, redSettings) {
                 socket.emit(updateValueEventName, replayMessages[id]);
             });
             socket.emit('ui-replay-done');
+        });
+        socket.on('ui-refresh', function() {
+            updateUi();
         });
         socket.on('disconnect', function() {
             ev.emit("endsocket", socket.client.id, socket.request.connection.remoteAddress);

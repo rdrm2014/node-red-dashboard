@@ -8,20 +8,25 @@ angular.module('ui').directive('uiGauge', [ '$timeout', '$interpolate',
             templateUrl: 'components/ui-gauge/ui-gauge.html',
             link: function(scope, element, attrs) {
                 $timeout(function() {
-                    var gauge;
+                    var gauge, bgnd, fgnd;
+                    var theme = scope.$eval('main.selectedTab.theme.name') || "theme-light";
                     var themeState = scope.$eval('main.selectedTab.theme.themeState');
-                    var bgnd = themeState["base-color"].value;
-                    var fgnd = themeState['widget-textColor'].value;
-                    var theme = scope.$eval('main.selectedTab.theme.name');
+                    if (themeState) {
+                        bgnd = themeState["widget-borderColor"].value;
+                        fgnd = themeState['widget-backgroundColor'].value;
+                        tgnd = themeState['widget-textColor'].value;
+                    }
 
                     //Backwards compatability for background and foreground
                     if (!bgnd || !fgnd) {
                         if (theme === 'theme-dark') {
                             bgnd = "#097479";
-                            fgnd = "#111111";
+                            fgnd = "#eeeeee";
+                            tgnd = "#eeeeee";
                         } else {
                             bgnd = "#0094CE";
-                            fgnd = "#eeeeee";
+                            fgnd = "#111111";
+                            tgnd = "#111111";
                         }
                     }
 
@@ -58,8 +63,6 @@ angular.module('ui').directive('uiGauge', [ '$timeout', '$interpolate',
                             value: scope.$eval('me.item.value'),
                             min: scope.$eval('me.item.min'),
                             max: scope.$eval('me.item.max'),
-                            // sx: scope.$eval('main.sizes.sx'),
-                            // sy: scope.$eval('main.sizes.sy'),
                             hideMinMax: scope.$eval('me.item.hideMinMax'),
                             levelColors: scope.$eval('me.item.colors'),
                             valueMinFontSize: 12,
@@ -78,13 +81,10 @@ angular.module('ui').directive('uiGauge', [ '$timeout', '$interpolate',
                             //gaugeOptions.donutStartAngle = 270;
                             gaugeOptions.pointer = false;
                         }
-                        // gaugeOptions.gaugeWidthScale = scope.$eval('me.item.gageoptions.lineWidth');
-                        // gaugeOptions.gaugeColor = scope.$eval('me.item.gageoptions.backgroundColor');
-                        // gaugeOptions.pointerOptions = scope.$eval('me.item.gageoptions.pointerOptions');
 
                         if (gaugeOptions.gaugeWidthScale === undefined) { delete gaugeOptions.gaugeWidthScale; }
                         if (gaugeOptions.gaugeColor === undefined) { gaugeOptions.gaugeColor = "rgba(127,127,127,0.5)"; }
-                        if (gaugeOptions.pointerOptions === undefined) { gaugeOptions.pointerOptions = {color:fgnd}; }
+                        if (gaugeOptions.pointerOptions === undefined) { gaugeOptions.pointerOptions = {color:tgnd}; }
 
                         if (scope.$eval('me.item.gtype') === 'compass') {
                             gaugeOptions.donut = true;
@@ -95,8 +95,8 @@ angular.module('ui').directive('uiGauge', [ '$timeout', '$interpolate',
                             gaugeOptions.pointerOptions = {toplength:12, bottomlength:12, bottomwidth:5, color:undefined};
                             gaugeOptions.gaugeColor = scope.$eval('me.item.gageoptions.compassColor[theme]');
                             gaugeOptions.levelColors = [scope.$eval('me.item.gageoptions.compassColor[theme]')];
-                            if (gaugeOptions.gaugeColor === undefined) { gaugeOptions.gaugeColor = bgnd; }
-                            if (gaugeOptions.pointerOptions.color === undefined) { gaugeOptions.pointerOptions.color = bgnd; }
+                            if (gaugeOptions.gaugeColor === undefined) { gaugeOptions.gaugeColor = fgnd; }
+                            if (gaugeOptions.pointerOptions.color === undefined) { gaugeOptions.pointerOptions.color = fgnd; }
                         }
 
                         gauge = new JustGage(gaugeOptions);
