@@ -1,19 +1,30 @@
 
-### 2.3.6-beta: Maintenance Release - (Not on NPM)
+### 2.3.7-beta: Maintenance Release (not yet released to Npm)
+
+**Fixes**
+
+ - Let date-picker survive changes of tabs - Issue#189
+ - Change text input box to detect tab to send data (rather than loss of focus) - Issue#196
+ - Update Site properties in UI when theme loaded from library - Issue#197
+
+
+### 2.3.6: Maintenance Release
 
 **Enhancements**
 
+ - let ui_gauge sector sizes be specified
  - sending tab change of "" to ui_control refreshes current page
  - let button widget pass messages (or be triggered by input)
  - enhance gulp, jshint and jscs checks
  - Hide page *title* tag until actually set
  - add optional i18n.js file to dist
+ - optionally let switch status be set by input/feedback rather than press - PR#188
 
- **Fixes**
+**Fixes**
 
-  - stop numeric widget emitting on accidental mouseover
-  - text input will now send it's payload on losing focus as well as enter (if in enter mode)
-  - fix form colours to be more dynamic to match theme, Issue#186
+- stop numeric widget emitting on accidental mouseover
+- text input will now send it's payload on losing focus as well as enter (if in enter mode)
+- fix form colours to be more dynamic to match theme, Issue#186
 
 ### 2.3.5: Maintenance Release
 

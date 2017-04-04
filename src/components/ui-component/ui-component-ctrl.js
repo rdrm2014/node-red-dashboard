@@ -21,6 +21,13 @@ angular.module('ui').controller('uiComponentController', ['$scope', 'UiEvents', 
                     break;
                 }
 
+                case 'switch': {
+                    me.switchClick = function () {
+                        throttle({ id:me.item.id, value:!me.item.value }, 0);
+                    };
+                    break;
+                }
+
                 case 'dropdown': {
                     me.itemChanged = function () {
                         me.valueChanged(0);
@@ -105,7 +112,7 @@ angular.module('ui').controller('uiComponentController', ['$scope', 'UiEvents', 
                         pickerOnly: me.item.showPicker && !(me.item.showSwatch || me.item.showValue)
                     };
                     me.item.key = function (event) {
-                        if ((event.charCode === 13) || (event.which === 13)) {
+                        if ((event.charCode === 13) || (event.which === 13) || (event.charCode === 9) || (event.which === 9)) {
                             events.emit({ id:me.item.id, value:me.item.value });
                             if (me.api) { me.api.close(); }
                         }
@@ -124,8 +131,10 @@ angular.module('ui').controller('uiComponentController', ['$scope', 'UiEvents', 
 
                 case 'date-picker': {
                     if (me.item.ddd !== undefined) {
-                        var b = me.item.ddd.split(/\D+/);
-                        me.item.ddd = new Date(Date.UTC(b[0], --b[1], b[2], b[3], b[4], b[5], b[6]));
+                        if (typeof me.item.ddd !== "object") {
+                            var b = me.item.ddd.split(/\D+/);
+                            me.item.ddd = new Date(Date.UTC(b[0], --b[1], b[2], b[3], b[4], b[5], b[6]));
+                        }
                     }
                     me.processInput = function (msg) {
                         msg.value = new Date(msg.value);
