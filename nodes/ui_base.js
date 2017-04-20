@@ -38,7 +38,8 @@ module.exports = function(RED) {
             defaultThemeState["group-borderColor"] = {value: "#ffffff"};
             defaultThemeState["widget-textColor"] = {value: "#111111"};
             defaultThemeState["widget-backgroundColor"] = {value: "#0094CE"};
-        } else {
+        }
+        else {
             defaultThemeState["base-color"] = {value: "#097479"};
             defaultThemeState["page-backgroundColor"] = {value: "#111111"};
             defaultThemeState["page-titlebar-backgroundColor"] = {value: "#097479"};
@@ -75,7 +76,7 @@ module.exports = function(RED) {
     RED.library.register("themes");
 
     RED.httpAdmin.get('/uisettings', function(req, res) {
-        var ret = RED.settings.ui || "";
+        var ret = RED.settings.ui || "{}";
         res.json(ret);
     });
 

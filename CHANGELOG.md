@@ -1,12 +1,31 @@
 
-### 2.3.7-beta: Maintenance Release (not yet released to Npm)
+### 2.3.8: Maintenance Release
+
+**Enhancements**
+
+ - Add keyboard shortcut to menu of shortcuts (ctrl-shift-d - Show Dashboard)
+
+**Fixes**
+
+ - Critical Fix : for Dashboard tab not populating on initial empty flow
+
+### 2.3.7: Maintenance Release
+
+**Enhancements**
+
+ - Stop rendering datapoints out of range on line charts - Issue#198
+ - Let dropdown placeholder text be editable - Issue#202
 
 **Fixes**
 
  - Let date-picker survive changes of tabs - Issue#189
  - Change text input box to detect tab to send data (rather than loss of focus) - Issue#196
  - Update Site properties in UI when theme loaded from library - Issue#197
-
+ - Fix audiocontext to reuse existing - Issue#199
+ - Better align text input and dropdown text inputs - Issue#201
+ - Let ui be hosted at / if required - Issue204
+ - Let bar and pie charts be reloaded correctly from saved data - Issue#205
+ - Let base colour theme edits work again (rather than resetting all the time)
 
 ### 2.3.6: Maintenance Release
 
