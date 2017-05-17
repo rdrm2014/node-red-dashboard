@@ -1,11 +1,25 @@
 
-### 2.3.10-beta: Maintenance Release
+### 2.3.11-beta: Maintenance Release
+
+**Enhancements**
+
+- Add name of tab to ui_control node tab change msg
+- Let dropdown use value as label if not otherwise specified
+
+**Fixes**
+
+ - Make sure chart display is fully refreshed on tab change - Issue #226
+ - Catch another possible missing theme escape path.
+ - Fix msg. label regression for ui_text node - Issue #230
+
+### 2.3.10: Maintenance Release
 
 **Enhancements**
 
  - Make fixup of Font Awesome fonts easier for developers
  - Let the Wave gauge display units if you wish
  - Add *change* tab event to ui_control output and also accept +1 and -1 to move to next/prev tab - Issue #194
+ - Let label field be set by a {{msg.property}} (for all widgets with label field) - Issue #220
 
 **Fixes**
 

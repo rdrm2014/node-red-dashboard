@@ -172,6 +172,19 @@ angular.module('ui').controller('uiComponentController', ['$scope', 'UiEvents', 
                         $scope.$$childTail.form.$setUntouched();
                         $scope.$$childTail.form.$setPristine();
                     };
+                    break;
+                }
+
+                case 'template' : {
+                    me.setFormat = function (format) {
+                        me.item.format = format;
+                    }
+
+                    // override format with msg.template if defined
+                    if (me.item.msg !== undefined && me.item.msg.template !== undefined) {
+                        me.setFormat(me.item.msg.template);
+                    }
+                    break;
                 }
             }
         }
@@ -194,7 +207,6 @@ angular.module('ui').controller('uiComponentController', ['$scope', 'UiEvents', 
                 events.emit(data);
                 return;
             }
-
             if (timer) {
                 clearTimeout(timer);
             }

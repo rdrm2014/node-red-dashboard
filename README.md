@@ -25,21 +25,12 @@ If you want to try the latest version from github, you can install it by
 
     npm i node-red/node-red-dashboard
 
-#### Migration from node-red-contrib-ui
-
-These nodes will replace the contrib-ui versions. node-red-contrib-ui
-**MUST** be uninstalled before installing node-red-dashboard.
-
-    cd ~/.node-red
-    npm uninstall node-red-contrib-ui
-
-In addition - some functionality is not exactly equivalent. There are breaking changes that will require some re-configuration.
 
 ## Features
 
 #### Dashboard sidebar
 
-The widget layout is now managed by a `dashboard` tab in the sidebar of the Node-RED editor.
+The widget layout is managed by a `dashboard` tab in the sidebar of the Node-RED editor.
 
 ##### Layout
 
@@ -50,24 +41,27 @@ dashboard sidebar. They can also be opened in an iframe - if allowed by the targ
 
 ##### Theme
 
- - **Style** - the theme of the UI is set in the dashboard sidebar. You can select a default Light, Dark or Custom Theme. You
-cannot have different themes for each tab.
+ - **Style** - the theme of the UI is set in the dashboard sidebar. You can select a default Light, Dark or Custom Theme.
+ You cannot have different themes for each tab.
 
 ##### Site
 
  - **Title** - the `title` of the UI page can be set.
 
- - **Options** - lets you optionally hide the title bar, and allow swiping sideways between tabs on a touch screen.
+ - **Options** - optionally hide the title bar, and allow swiping sideways between tabs on a touch screen.
 
- - **Sizes** - you can set the basic geometry of the grid layout in pixels. The **width** and **height** of widgets can be set, as can the width of *groups*. These are all specified in units of approximately 50 pixels.
-
+ - **Sizes** - sets the basic geometry of the grid layout in pixels. The **width** and **height** of widgets can be set, as can the width of *groups*. These are all specified in units of approximately 50 pixels.
 
 #### Widgets
 
-The default width of a group is 6 units as it was in contrib-ui ( &approx;300 pixels ). Setting a widget to `auto` will fill the available
-width of the group. It is still advisable to use multiple groups if you can, rather than one big group, so that the page can dynamically resize on smaller screens.
+The default width of a group is 6 units ( &approx;300 pixels ). Setting a widget to `auto` will fill the available
+width of the group. It is still advisable to use multiple groups if possible, rather than one big group, so that the page can dynamically resize on smaller screens.
 
 Group labels are optional.
+
+Most widgets can have a label and value - both of these can be specified by properties of the incoming msg if required, and modified by angular filters. For example the label can be set to `{{msg.topic}}`, or the value could be set to `{{value | number:1}}%` to round the value to one decimal place and append a % sign.
+
+**Note**: Each node may parse the `msg.payload` to make it suitable for display. This converted version is exposed as the variable called `value`, (see example above).  
 
 Any widget can be disabled by passing in a `msg.enabled` property set to `false;`. *Note:* this doesn't stop the widget receiving messages but does stop inputs being active and does re-style the widget.
 
@@ -80,7 +74,7 @@ Any widget can be disabled by passing in a `msg.enabled` property set to `false;
 
         [ "Choice 1", "Choice 2", {"Choice 3": 3} ]
 
-  Setting `msg.payload` will pre-select the value in the dropdown.
+     Setting `msg.payload` will pre-select the value in the dropdown.
   - **Form** - a widget that can be composed of several sub-widgets. When submitted all values are submitted as a single message.
   - **Gauge** - has 4 modes - *standard* (simple gauge), *donut* (complete 360&deg;), *compass*, and *wave*. You can also specify the colour range of the standard and donut gauges.
   - **Notification** - creates alerts to the user - can either be a toast popup, or a dismissable alert box. The alert may be targeted to a single user.
@@ -132,8 +126,8 @@ git clone https://github.com/node-red/node-red-dashboard.git
 cd node-red-dashboard
 npm install
 ```
-The plugin uses the ```dist``` folder if it exists and contains an ```index.html``` file. Make sure to delete it if you want to use the non-minified version.
-After changing the front-end code in the src folder, use ```gulp``` to update the minified files and update the *appcache* manifest.
+The plugin uses the ```dist``` folder if it exists. Make sure it has been deleted if you want to use the non-minified version while developing.
+After finishing changes to the front-end code in the src folder, you can use ```gulp``` to update and rebuild the minified files and update the *appcache* manifest.
 
     gulp
 
