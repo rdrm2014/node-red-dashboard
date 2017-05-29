@@ -1,16 +1,29 @@
 
-### 2.3.11-beta: Maintenance Release
+### 2.4.0-beta: Milestone Release
+
+**Enhancements**
+
+ - add ability to specify basefont style. (NOTE the Cross Platform font uses a
+     system font stack approach that should look good across as many platforms as possible)
+ - merge tabs and links so all can be reordered - PR #234
+
+### 2.3.11: Maintenance Release
 
 **Enhancements**
 
 - Add name of tab to ui_control node tab change msg
 - Let dropdown use value as label if not otherwise specified
+- Add label field to date-picker
+- Adjust labels spacing on gauges to look better at small sizes
 
 **Fixes**
 
  - Make sure chart display is fully refreshed on tab change - Issue #226
  - Catch another possible missing theme escape path.
  - Fix msg. label regression for ui_text node - Issue #230
+ - Retain enable/disable state of widgets (broken in 2.3.10)
+ - Fix name-spacing of base node inputs
+ - Fix custom theme to default back to previous setting
 
 ### 2.3.10: Maintenance Release
 

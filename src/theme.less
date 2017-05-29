@@ -1,6 +1,7 @@
 /*
 	ALL COMPONENTS/CONTENT
 */
+@baseFont: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif;
 @baseColor: #fff;
 @pageBackgroundColor: #eee;
 @pageTitlebarBackgroundColor: #0094CE;
@@ -19,6 +20,7 @@
 
 body.nr-dashboard-theme {
 	background-color: @pageBackgroundColor;
+    font-family: @baseFont;
 }
 
 body.nr-dashboard-theme md-content {
@@ -157,12 +159,16 @@ md-select-menu md-option:focus:not([disabled]):not([selected]) {
     margin: 8px;
 }
 .nr-dashboard-theme .nr-dashboard-gauge-title  {
-    margin: 4px 0px 20px 0px;
+    margin: 8px 0px 16px 0px;
     z-index: 1;
 }
 .nr-dashboard-theme .nr-dashboard-gauge-titlel  {
     font-size: larger;
     font-weight: 500 !important;
+}
+.nr-dashboard-theme .nr-dashboard-gauge-titles  {
+    font-size: 11px;
+    padding-bottom: 16px;
 }
 
 /* Numeric */
