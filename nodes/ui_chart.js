@@ -32,9 +32,11 @@ module.exports = function(RED) {
                 height: parseInt(config.height || group.config.width/2+1 || 4),
                 ymin: config.ymin,
                 ymax: config.ymax,
+                dot: config.dot || false,
                 xformat : config.xformat || "HH:mm:SS",
                 cutout: parseInt(config.cutout || 0),
-                colors: config.colors
+                colors: config.colors,
+                useOneColor: config.useOneColor || false
             },
             convertBack: function(data) {
                 if (data[0]) {
@@ -84,7 +86,7 @@ module.exports = function(RED) {
                                         return {x:i[0], y:i[1]};
                                     }));
                                 }
-                                value = [{ key:node.id, values:na}];
+                                value = [{ key:node.id, values:na }];
                             }
                         }
                     }
@@ -215,6 +217,10 @@ module.exports = function(RED) {
             }
         };
 
+        ui.ev.on('changetab', function() {
+            node.receive({payload:"A"});
+        });
+
         var done = ui.add(options);
         setTimeout(function() {
             node.emit("input",{payload:"start"}); // trigger a redraw at start to flush out old data.
@@ -222,7 +228,10 @@ module.exports = function(RED) {
                 node.send([null, {payload:"restore", for:node.id}]);
             }
         }, 100);
-        node.on("close", done);
+        node.on("close", function() {
+            ui.ev.removeAllListeners();
+            done();
+        })
     }
     RED.nodes.registerType("ui_chart", ChartNode);
 };

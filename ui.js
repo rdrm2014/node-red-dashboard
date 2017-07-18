@@ -31,6 +31,7 @@ var serveStatic = require('serve-static'),
 var baseConfiguration = {};
 
 var menu = [];
+var globals = [];
 var updateValueEventName = 'update-value';
 var io;
 var currentValues = {};
@@ -163,21 +164,30 @@ function add(opt) {
 
             var addField = function(m) {
                 if (opt.control.hasOwnProperty(m) && opt.control[m].indexOf("{{") !== -1) {
-                    var b = opt.control[m].split("{{")[1].split("}}")[0].trim();
-                    if (b.indexOf("|") !== -1) { b = b.split("|")[0]; }
-                    if (b.indexOf(" ") !== -1) { b = b.split(" ")[0]; }
-                    if (b.indexOf("msg.") === 0) {
-                        b = b.split("msg.")[1];
-                        if (b.indexOf(".") !== -1) { b = b.split(".")[0]; }
-                        if (!toEmit.hasOwnProperty("msg")) { toEmit.msg = {}; }
-                        if (!toEmit.msg.hasOwnProperty(b) && msg.hasOwnProperty(b)) {
-                            toEmit.msg[b] = JSON.parse(JSON.stringify(msg[b]));
+                    var a = opt.control[m].split("{{");
+                    a.shift();
+                    for (var i = 0; i < a.length; i++) {
+                        var b = a[i].split("}}")[0].trim();
+                        b.replace(/\"/g,'').replace(/\'/g,'');
+                        if (b.indexOf("|") !== -1) { b = b.split("|")[0]; }
+                        if (b.indexOf(" ") !== -1) { b = b.split(" ")[0]; }
+                        if (b.indexOf("?") !== -1) { b = b.split("?")[0]; }
+                        b.replace(/\(/g,'').replace(/\)/g,'');
+                        if (b.indexOf("msg.") >= 0) {
+                            b = b.split("msg.")[1];
+                            if (b.indexOf(".") !== -1) { b = b.split(".")[0]; }
+                            if (b.indexOf("[") !== -1) { b = b.split("[")[0]; }
+                            if (!toEmit.hasOwnProperty("msg")) { toEmit.msg = {}; }
+                            if (!toEmit.msg.hasOwnProperty(b) && msg.hasOwnProperty(b)) {
+                                toEmit.msg[b] = JSON.parse(JSON.stringify(msg[b]));
+                            }
                         }
-                    }
-                    else {
-                        if (b.indexOf(".") !== -1) { b = b.split(".")[0]; }
-                        if (!toEmit.hasOwnProperty(b) && msg.hasOwnProperty(b)) {
-                            toEmit[b] = JSON.parse(JSON.stringify(msg[b]));
+                        else {
+                            if (b.indexOf(".") !== -1) { b = b.split(".")[0]; }
+                            if (b.indexOf("[") !== -1) { b = b.split("[")[0]; }
+                            if (!toEmit.hasOwnProperty(b) && msg.hasOwnProperty(b)) {
+                                toEmit[b] = JSON.parse(JSON.stringify(msg[b]));
+                            }
                         }
                     }
                 }
@@ -188,7 +198,7 @@ function add(opt) {
             addField("format");
             if (msg.hasOwnProperty("enabled")) { toEmit.disabled = !msg.enabled; }
             toEmit.id = toStore.id = opt.node.id;
-            //console.log("EMIT",toEmit);
+            //console.log("EMIT",JSON.stringify(toEmit));
 
             // Emit and Store the data
             io.emit(updateValueEventName, toEmit);
@@ -296,7 +306,7 @@ function init(server, app, log, redSettings) {
                 name = menu[index].header === undefined ? menu[index].name : menu[index].header;
             }
             ev.emit("changetab", index, name, socket.client.id, socket.request.connection.remoteAddress);
-            if (index < menu.length) { updateUi(); }
+            //if (index < menu.length) { updateUi(); }
         });
         socket.on('ui-refresh', function() {
             updateUi();
@@ -321,7 +331,8 @@ function updateUi(to) {
         to.emit('ui-controls', {
             site: baseConfiguration.site,
             theme: baseConfiguration.theme,
-            menu: menu
+            menu: menu,
+            globals: globals
         });
         updateUiPending = false;
     });
@@ -347,60 +358,78 @@ function itemSorter(item1, item2) {
 
 function addControl(tab, groupHeader, control) {
     if (typeof control.type !== 'string') { return function() {}; }
-    groupHeader = groupHeader || settings.defaultGroupHeader;
-    control.order = parseFloat(control.order);
 
-    var foundTab = find(menu, function (t) {return t.id === tab.id });
-    if (!foundTab) {
-        foundTab = {
-            id: tab.id,
-            header: tab.config.name,
-            order: parseFloat(tab.config.order),
-            icon: tab.config.icon,
-            items: []
-        };
-        menu.push(foundTab);
-        menu.sort(itemSorter);
+    // global template?
+    if (control.type === 'template' && control.templateScope === 'global') {
+        // add content to globals
+        globals.push(control);
+        updateUi();
+
+        // return remove function
+        return function() {
+            var index = globals.indexOf(control);
+            if (index >= 0) {
+                globals.splice(index, 1);
+                updateUi();
+            }
+        }
     }
+    else {
+        groupHeader = groupHeader || settings.defaultGroupHeader;
+        control.order = parseFloat(control.order);
 
-    var foundGroup = find(foundTab.items, function (g) {return g.header === groupHeader;});
-    if (!foundGroup) {
-        foundGroup = {
-            header: groupHeader,
-            items: []
-        };
-        foundTab.items.push(foundGroup);
-    }
-    foundGroup.items.push(control);
-    foundGroup.items.sort(itemSorter);
-    foundGroup.order = groupHeader.config.order;
-    foundTab.items.sort(itemSorter);
+        var foundTab = find(menu, function (t) {return t.id === tab.id });
+        if (!foundTab) {
+            foundTab = {
+                id: tab.id,
+                header: tab.config.name,
+                order: parseFloat(tab.config.order),
+                icon: tab.config.icon,
+                items: []
+            };
+            menu.push(foundTab);
+            menu.sort(itemSorter);
+        }
 
-    updateUi();
+        var foundGroup = find(foundTab.items, function (g) {return g.header === groupHeader;});
+        if (!foundGroup) {
+            foundGroup = {
+                header: groupHeader,
+                items: []
+            };
+            foundTab.items.push(foundGroup);
+        }
+        foundGroup.items.push(control);
+        foundGroup.items.sort(itemSorter);
+        foundGroup.order = groupHeader.config.order;
+        foundTab.items.sort(itemSorter);
 
-    // Return the remove function for this control
-    return function() {
-        var index = foundGroup.items.indexOf(control);
-        if (index >= 0) {
-            // Remove the item from the group
-            foundGroup.items.splice(index, 1);
+        updateUi();
 
-            // If the group is now empty, remove it from the tab
-            if (foundGroup.items.length === 0) {
-                index = foundTab.items.indexOf(foundGroup);
-                if (index >= 0) {
-                    foundTab.items.splice(index, 1);
+        // Return the remove function for this control
+        return function() {
+            var index = foundGroup.items.indexOf(control);
+            if (index >= 0) {
+                // Remove the item from the group
+                foundGroup.items.splice(index, 1);
 
-                    // If the tab is now empty, remove it as well
-                    if (foundTab.items.length === 0) {
-                        index = menu.indexOf(foundTab);
-                        if (index >= 0) {
-                            menu.splice(index, 1);
+                // If the group is now empty, remove it from the tab
+                if (foundGroup.items.length === 0) {
+                    index = foundTab.items.indexOf(foundGroup);
+                    if (index >= 0) {
+                        foundTab.items.splice(index, 1);
+
+                        // If the tab is now empty, remove it as well
+                        if (foundTab.items.length === 0) {
+                            index = menu.indexOf(foundTab);
+                            if (index >= 0) {
+                                menu.splice(index, 1);
+                            }
                         }
                     }
                 }
+                updateUi();
             }
-            updateUi();
         }
     }
 }
