@@ -200,11 +200,12 @@ function add(opt) {
             // if label, or format field is set to a msg property, emit that as well
             addField("label");
             addField("format");
+            addField("color");
             if (msg.hasOwnProperty("enabled")) { toEmit.disabled = !msg.enabled; }
             toEmit.id = toStore.id = opt.node.id;
 
             // Emit and Store the data
-            if (settings.verbose) { console.log("UI-EMIT",JSON.stringify(toEmit)); }
+            //if (settings.verbose) { console.log("UI-EMIT",JSON.stringify(toEmit)); }
             io.emit(updateValueEventName, toEmit);
             replayMessages[opt.node.id] = toStore;
 
@@ -212,6 +213,7 @@ function add(opt) {
             if (opt.forwardInputMessages && opt.node._wireCount) {
                 msg.payload = opt.convertBack(fullDataset);
                 msg = opt.beforeSend(msg) || msg;
+                //if (settings.verbose) { console.log("UI-`SEND`",JSON.stringify(msg)); }
                 opt.node.send(msg);
             }
         }

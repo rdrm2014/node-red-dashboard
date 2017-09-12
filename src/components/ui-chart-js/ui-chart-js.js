@@ -69,6 +69,15 @@ angular.module('ui').directive('uiChartJs', [ '$timeout', '$interpolate',
                             }
                             else {
                                 // Bar charts and non update line charts replace the data
+                                if (type === "line") {
+                                    if (!isNaN(newValue.values.data[0][0])) {
+                                        delete scope.config.options.scales.xAxes[0].type;
+                                        delete scope.config.options.scales.xAxes[0].time;
+                                    }
+                                    else {
+                                        scope.config = loadConfiguration(type, scope);
+                                    }
+                                }
                                 scope.config.data = newValue.values.data;
                                 scope.config.series = newValue.values.series;
                                 scope.config.labels = newValue.values.labels;
@@ -133,7 +142,13 @@ function loadConfiguration(type,scope) {
     if (type === 'line') {
         config.options.scales.xAxes = [{
             type: 'time',
-            time: {
+            scaleLabel: {
+                fontColor: "#fff",
+                display: true
+            },
+        }];
+        if (xFormat !== "auto") {
+            config.options.scales.xAxes[0].time = {
                 // Override xAxes formats
                 displayFormats: {
                     'millisecond': xFormat,
@@ -146,12 +161,9 @@ function loadConfiguration(type,scope) {
                     'quarter': xFormat,
                     'year': xFormat,
                 }
-            },
-            scaleLabel: {
-                fontColor: "#fff",
-                display: true
-            },
-        }];
+            };
+        }
+
         config.options.tooltips = {
             mode: 'x-axis',
             callbacks: {
@@ -159,12 +171,22 @@ function loadConfiguration(type,scope) {
                     // Display and format the most recent time value as the title.
                     // This ensures the title reflects the xAxis time.
                     var largest = tooltip[0].xLabel;
+                    if (isNaN(largest) || (largest < 1000000)) { return largest; }
                     for (var i=1; i<tooltip.length; i++) {
                         if (tooltip[i].xLabel > largest) {
                             largest = tooltip[i].xLabel;
                         }
                     }
-                    return moment(largest).format(xFormat);
+                    if (xFormat !== "auto") { return moment(largest).format(xFormat); }
+                    else {
+                        return moment(largest).calendar(null, {
+                            sameDay: 'HH:mm:ss',
+                            nextDay: 'HH:mm',
+                            lastDay: 'HH:mm',
+                            lastWeek: 'MMM D, hA',
+                            sameElse: 'lll'
+                        });
+                    }
                 }
             }
         }
@@ -208,6 +230,10 @@ function loadConfiguration(type,scope) {
 
         if ((type === 'line') || (type === 'bar')) {
             config.options.scales.yAxes[0].ticks.autoSkip = true;
+            config.options.scales.yAxes[0].ticks.callback = function(value, index, values) {
+                var locale = (navigator.languages && navigator.languages.length) ? navigator.languages[0] : navigator.language;
+                return value.toLocaleString(locale);
+            }
             if (!isNaN(yMin)) { config.options.scales.yAxes[0].ticks.min = yMin; }
             if (!isNaN(yMax)) { config.options.scales.yAxes[0].ticks.max = yMax; }
             if ((!isNaN(yMin)) && (!isNaN(yMax))) {
@@ -222,6 +248,10 @@ function loadConfiguration(type,scope) {
             config.options.scales.xAxes[0].ticks.beginAtZero = true;
             if (!isNaN(yMin)) { config.options.scales.xAxes[0].ticks.min = yMin; }
             if (!isNaN(yMax)) { config.options.scales.xAxes[0].ticks.max = yMax; }
+            config.options.scales.xAxes[0].ticks.callback = function(value, index, values) {
+                var locale = (navigator.languages && navigator.languages.length) ? navigator.languages[0] : navigator.language;
+                return value.toLocaleString(locale);
+            }
         }
 
         // Theme settings
