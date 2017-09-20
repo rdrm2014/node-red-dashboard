@@ -197,7 +197,7 @@ function add(opt) {
                 }
             }
 
-            // if label, or format field is set to a msg property, emit that as well
+            // if label, format or color field is set to a msg property, emit that as well
             addField("label");
             addField("format");
             addField("color");
@@ -213,7 +213,7 @@ function add(opt) {
             if (opt.forwardInputMessages && opt.node._wireCount) {
                 msg.payload = opt.convertBack(fullDataset);
                 msg = opt.beforeSend(msg) || msg;
-                //if (settings.verbose) { console.log("UI-`SEND`",JSON.stringify(msg)); }
+                //if (settings.verbose) { console.log("UI-SEND",JSON.stringify(msg)); }
                 opt.node.send(msg);
             }
         }
@@ -229,8 +229,7 @@ function add(opt) {
         var toSend = {payload: converted};
         toSend = opt.beforeSend(toSend, msg) || toSend;
         toSend.socketid = toSend.socketid || msg.socketid;
-        opt.node.send(toSend);
-
+        if (!msg.hasOwnProperty("fromInput")) { opt.node.send(toSend); } // TODO: too specific
         if (opt.storeFrontEndInputAsState) {
             //fwd to all UI clients
             io.emit(updateValueEventName, msg);
