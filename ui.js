@@ -21,27 +21,25 @@ module.exports = function(RED) {
     };
 };
 
-var serveStatic = require('serve-static'),
-    socketio = require('socket.io'),
-    path = require('path'),
-    fs = require('fs'),
-    events = require('events'),
-    dashboardVersion = require('./package.json').version;
+var fs = require('fs');
+var path = require('path');
+var events = require('events');
+var socketio = require('socket.io');
+var serveStatic = require('serve-static');
+var dashboardVersion = require('./package.json').version;
 
 var baseConfiguration = {};
-
+var io;
 var menu = [];
 var globals = [];
+var settings = {};
 var updateValueEventName = 'update-value';
-var io;
 var currentValues = {};
 var replayMessages = {};
 var removeStateTimers = {};
 var removeStateTimeout = 1000;
 var ev = new events.EventEmitter();
 ev.setMaxListeners(0);
-
-var settings = {};
 
 function toNumber(keepDecimals, config, input) {
     if (input === undefined) { return; }
@@ -78,7 +76,7 @@ function beforeSend(msg) {
     //do nothing
 }
 
-/*
+/* This is the handler for inbound msg from previous nodes...
 options:
     node - the node that represents the control on a flow
     control - the control to be added
@@ -87,15 +85,16 @@ options:
     [emitOnlyNewValues] - boolean (default true).
         If true, it checks if the payload changed before sending it
         to the front-end. If the payload is the same no message is sent.
+    [forwardInputMessages] - boolean (default true).
+        If true, forwards input messages to the output
+    [storeFrontEndInputAsState] - boolean (default true).
+        If true, any message received from front-end is stored as state
 
     [convert] - callback to convert the value before sending it to the front-end
-    [convertBack] - callback to convert the message from front-end before sending it to the next connected node
-
     [beforeEmit] - callback to prepare the message that is emitted to the front-end
-    [beforeSend] - callback to prepare the message that is sent to the output
 
-    [forwardInputMessages] - default true. If true, forwards input messages to the output
-    [storeFrontEndInputAsState] - default true. If true, any message received from front-end is stored as state
+    [convertBack] - callback to convert the message from front-end before sending it to the next connected node
+    [beforeSend] - callback to prepare the message that is sent to the output
 */
 function add(opt) {
     clearTimeout(removeStateTimers[opt.node.id]);
@@ -110,10 +109,10 @@ function add(opt) {
     if (typeof opt.storeFrontEndInputAsState === 'undefined') {
         opt.storeFrontEndInputAsState = true;
     }
-    opt.beforeEmit = opt.beforeEmit || beforeEmit;
-    opt.beforeSend = opt.beforeSend || beforeSend;
     opt.convert = opt.convert || noConvert;
+    opt.beforeEmit = opt.beforeEmit || beforeEmit;
     opt.convertBack = opt.convertBack || noConvert;
+    opt.beforeSend = opt.beforeSend || beforeSend;
     opt.control.id = opt.node.id;
     var remove = addControl(opt.tab, opt.group, opt.control);
 
@@ -219,17 +218,20 @@ function add(opt) {
         }
     });
 
+    // This is the handler for messages coming back from the UI
     var handler = function (msg) {
-        if (msg.id !== opt.node.id) { return; }
+        if (msg.id !== opt.node.id) { return; }  // ignore if not us
         var converted = opt.convertBack(msg.value);
         if (opt.storeFrontEndInputAsState) {
             currentValues[msg.id] = converted;
             replayMessages[msg.id] = msg;
         }
-        var toSend = {payload: converted};
+        var toSend = {payload:converted};
         toSend = opt.beforeSend(toSend, msg) || toSend;
         toSend.socketid = toSend.socketid || msg.socketid;
-        if (!msg.hasOwnProperty("fromInput")) { opt.node.send(toSend); } // TODO: too specific
+        if (!msg.hasOwnProperty("_fromInput")) {   // TODO: too specific
+            opt.node.send(toSend);      // send to following nodes
+        }
         if (opt.storeFrontEndInputAsState) {
             //fwd to all UI clients
             io.emit(updateValueEventName, msg);
@@ -312,7 +314,6 @@ function init(server, app, log, redSettings) {
                 name = menu[index].header === undefined ? menu[index].name : menu[index].header;
             }
             ev.emit("changetab", index, name, socket.client.id, socket.request.connection.remoteAddress);
-            //if (index < menu.length) { updateUi(); }
         });
         socket.on('ui-refresh', function() {
             updateUi();

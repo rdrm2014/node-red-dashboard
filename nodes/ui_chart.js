@@ -36,7 +36,8 @@ module.exports = function(RED) {
                 dot: config.dot || false,
                 xformat : config.xformat || "HH:mm:ss",
                 cutout: parseInt(config.cutout || 0),
-                colors: config.colors
+                colors: config.colors,
+                useOneColor: config.useOneColor || false
             },
             convertBack: function(data) {
                 if (node.newStyle) {
@@ -70,20 +71,20 @@ module.exports = function(RED) {
                 var converted = {};
                 if (ChartIdList.hasOwnProperty(node.id) && ChartIdList[node.id] !== node.chartType) {
                     value = [];
-                    oldValue = [];
                 }
                 ChartIdList[node.id] = node.chartType;
                 if (Array.isArray(value)) {
-                    if (node.newStyle && (!value[0].hasOwnProperty("key"))) {
+                    if (value.length === 0) { // reset chart
+                        converted.update = false;
+                        converted.updatedValues = [];
+                        return converted;
+                    }
+                    //if ((node.newStyle) && !value[0].hasOwnProperty("key")) {
+                    if (!value[0].hasOwnProperty("key")) {
                         if (value[0].hasOwnProperty("series") && value[0].hasOwnProperty("data")) {
                             if (node.chartType === "line") {
                                 if (isNaN(value[0].data[0][0])) {
-                                    // if (typeof value[0].data[0][0] === "undefined") {
-                                    //     value[0].data = [value[0].data];
-                                    // }
-                                    // else {
                                     delete value[0].labels;
-                                    //}
                                 }
                             }
                             else if (node.chartType === "bar" || node.chartType === "horizontalBar") {
@@ -98,6 +99,11 @@ module.exports = function(RED) {
                                     value[0].labels = tmp2;
                                 }
                             }
+                            // else if (node.chartType === "pie") {
+                            //     var tmp3 = value[0].series;
+                            //     value[0].series = value[0].labels;
+                            //     value[0].labels = tmp3;
+                            // }
                             value = [{ key:node.id, values:(value[0] || {series:[], data:[], labels:[]}) }];
                         }
                         else {
@@ -141,100 +147,101 @@ module.exports = function(RED) {
                     converted.newPoint = true;
                     var label = msg.label || " ";
                     var series = msg.series || msg.topic || "";
-                    // if (node.chartType === "bar" || node.chartType === "horizontalBar") {
-                    //     label = msg.label || " ";
-                    //     series = msg.series || msg.topic || "";
-                    // }
+                    if (node.chartType === "bar" || node.chartType === "horizontalBar") {
+                        if (!node.newStyle || !msg.series) {
+                            label = msg.topic || msg.label || " ";
+                            series = msg.series || "";
+                        }
+                    }
                     var found = false;
-                    if (!oldValue) { oldValue = [];}
-                    if (oldValue.length === 0) {
+                    if ((!oldValue) || (oldValue.length === 0)) {
                         oldValue = [{ key:node.id, values:{ series:[], data:[], labels:[] } }];
                     }
-                    if (node.chartType === "line" || node.chartType === "bar" || node.chartType === "horizontalBar" || node.chartType === "radar") {  // Line, Bar and Radar
-                        var refill = false;
-                        if (node.chartType === "line") { label = ""; }
-                        var s = oldValue[0].values.series.indexOf(series);
-                        if (!oldValue[0].values.hasOwnProperty("labels")) { oldValue[0].values.labels = []; }
-                        var l = oldValue[0].values.labels.indexOf(label);
-                        if (s === -1) {
-                            oldValue[0].values.series.push(series);
-                            s = oldValue[0].values.series.length - 1;
-                            oldValue[0].values.data[s] = [];
-                            if (l > 0) { refill = true; }
-                        }
-                        if (l === -1) {
-                            oldValue[0].values.labels.push(label);
-                            l = oldValue[0].values.labels.length - 1;
-                            if (l > 0) { refill = true; }
-                        }
-                        if (node.chartType === "line") {
-                            var time;
-                            if (msg.timestamp !== undefined) { time = new Date(msg.timestamp).getTime(); }
-                            else { time = new Date().getTime(); }
-                            var limitOffsetSec = parseInt(config.removeOlder) * parseInt(config.removeOlderUnit);
-                            var limitTime = time - limitOffsetSec * 1000;
-                            if (time < limitTime) { return oldValue; } // ignore if too old for window
-                            var point = { "x":time, "y":value };
-                            oldValue[0].values.data[s].push(point);
-                            converted.newPoint = [{ key:node.id, update:true, values:{ series:series, data:point, labels:label } }];
-                            var rc = 0;
-                            for (var u = 0; u < oldValue[0].values.data[s].length; u++) {
-                                if (oldValue[0].values.data[s][u].x >= limitTime) {
-                                    break;  // stop as soon as we are in time window.
-                                }
-                                else {
-                                    oldValue[0].values.data[s].shift();
-                                    rc += 1;
-                                }
-                            }
-                            if (config.removeOlderPoints) {
-                                while (oldValue[0].values.data[s].length > config.removeOlderPoints) {
-                                    oldValue[0].values.data[s].shift();
-                                    rc += 1;
-                                }
-                            }
-                            if (rc > 0) { converted.newPoint[0].remove = rc; }
-                            var swap; // insert correctly if a timestamp was earlier.
-                            for (var t = oldValue[0].values.data[s].length-2; t>=0; t--) {
-                                if (oldValue[0].values.data[s][t].x <= time) {
-                                    break;  // stop if we are in the right place
-                                }
-                                else {
-                                    swap = oldValue[0].values.data[s][t];
-                                    oldValue[0].values.data[s][t] = oldValue[0].values.data[s][t+1];
-                                    oldValue[0].values.data[s][t+1] = swap;
-                                }
-                            }
-                            if (swap) { converted.newPoint = true; } // if inserted then update whole chart
-                        }
-                        else {
-                            oldValue[0].values.data[s][l] = value;
-                            if (refill) {
-                                for (var i = 0; i < oldValue[0].values.series.length; i++) {
-                                    for (var k = 0; k < oldValue[0].values.labels.length; k++) {
-                                        oldValue[0].values.data[i][k] = oldValue[0].values.data[i][k] || null;
-                                    }
-                                }
-                            }
-                        }
-                        converted.update = false;
-                        converted.updatedValues = oldValue;
+                    //if (node.chartType === "line" || node.chartType === "pie" || node.chartType === "bar" || node.chartType === "horizontalBar" || node.chartType === "radar") {  // Line, Bar and Radar
+                    var refill = false;
+                    if (node.chartType === "line") { label = ""; }
+                    var s = oldValue[0].values.series.indexOf(series);
+                    if (!oldValue[0].values.hasOwnProperty("labels")) { oldValue[0].values.labels = []; }
+                    var l = oldValue[0].values.labels.indexOf(label);
+                    if (s === -1) {
+                        oldValue[0].values.series.push(series);
+                        s = oldValue[0].values.series.length - 1;
+                        oldValue[0].values.data[s] = [];
+                        if (l > 0) { refill = true; }
                     }
-                    else { // Pie and Polar chart
-                        for (var p=0; p<oldValue[0].values.labels.length; p++) {
-                            if (oldValue[0].values.labels[p] === label) {
-                                oldValue[0].values.data[p] = value;
-                                found = true;
-                                break;
+                    if (l === -1) {
+                        oldValue[0].values.labels.push(label);
+                        l = oldValue[0].values.labels.length - 1;
+                        if (l > 0) { refill = true; }
+                    }
+                    if (node.chartType === "line") {
+                        var time;
+                        if (msg.timestamp !== undefined) { time = new Date(msg.timestamp).getTime(); }
+                        else { time = new Date().getTime(); }
+                        var limitOffsetSec = parseInt(config.removeOlder) * parseInt(config.removeOlderUnit);
+                        var limitTime = time - limitOffsetSec * 1000;
+                        if (time < limitTime) { return oldValue; } // ignore if too old for window
+                        var point = { "x":time, "y":value };
+                        oldValue[0].values.data[s].push(point);
+                        converted.newPoint = [{ key:node.id, update:true, values:{ series:series, data:point, labels:label } }];
+                        var rc = 0;
+                        for (var u = 0; u < oldValue[0].values.data[s].length; u++) {
+                            if (oldValue[0].values.data[s][u].x >= limitTime) {
+                                break;  // stop as soon as we are in time window.
+                            }
+                            else {
+                                oldValue[0].values.data[s].shift();
+                                rc += 1;
                             }
                         }
-                        if (!found) {
-                            oldValue[0].values.labels.push(msg.label || msg.topic);
-                            oldValue[0].values.data.push(value);
+                        if (config.removeOlderPoints) {
+                            while (oldValue[0].values.data[s].length > config.removeOlderPoints) {
+                                oldValue[0].values.data[s].shift();
+                                rc += 1;
+                            }
                         }
-                        converted.update = false;
-                        converted.updatedValues = oldValue;
+                        if (rc > 0) { converted.newPoint[0].remove = rc; }
+                        var swap; // insert correctly if a timestamp was earlier.
+                        for (var t = oldValue[0].values.data[s].length-2; t>=0; t--) {
+                            if (oldValue[0].values.data[s][t].x <= time) {
+                                break;  // stop if we are in the right place
+                            }
+                            else {
+                                swap = oldValue[0].values.data[s][t];
+                                oldValue[0].values.data[s][t] = oldValue[0].values.data[s][t+1];
+                                oldValue[0].values.data[s][t+1] = swap;
+                            }
+                        }
+                        if (swap) { converted.newPoint = true; } // if inserted then update whole chart
                     }
+                    else {
+                        oldValue[0].values.data[s][l] = value;
+                        if (refill) {
+                            for (var i = 0; i < oldValue[0].values.series.length; i++) {
+                                for (var k = 0; k < oldValue[0].values.labels.length; k++) {
+                                    oldValue[0].values.data[i][k] = oldValue[0].values.data[i][k] || null;
+                                }
+                            }
+                        }
+                    }
+                    converted.update = true;
+                    converted.updatedValues = oldValue;
+                    // }
+                    // else { // Polar chart
+                    //     for (var p=0; p<oldValue[0].values.labels.length; p++) {
+                    //         if (oldValue[0].values.labels[p] === msg.topic || msg.label) {
+                    //             oldValue[0].values.data[p] = value;
+                    //             found = true;
+                    //             break;
+                    //         }
+                    //     }
+                    //     if (!found) {
+                    //         oldValue[0].values.labels.push(msg.topic || msg.label);
+                    //         oldValue[0].values.data.push(value);
+                    //     }
+                    //     converted.update = true;
+                    //     converted.updatedValues = oldValue;
+                    // }
                 }
                 return converted;
             }
@@ -251,6 +258,7 @@ module.exports = function(RED) {
                 node.send([null, {payload:"restore", for:node.id}]);
             }
         }, 100);
+
         node.on("close", function() {
             ui.ev.removeAllListeners();
             done();

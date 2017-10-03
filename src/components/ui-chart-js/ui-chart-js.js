@@ -1,3 +1,6 @@
+var lineColours = [];
+var barColours = [];
+
 /* global angular */
 angular.module('ui').directive('uiChartJs', [ '$timeout', '$interpolate',
     function ($timeout, $interpolate) {
@@ -8,7 +11,14 @@ angular.module('ui').directive('uiChartJs', [ '$timeout', '$interpolate',
             link: function(scope, element, attrs) {
                 $timeout(function() {
                     var type = scope.$eval('me.item.look');
+                    var baseColours = scope.$eval('me.item.colors') || ['#1F77B4', '#AEC7E8', '#FF7F0E', '#2CA02C', '#98DF8A', '#D62728', '#FF9896', '#9467BD', '#C5B0D5'];
+                    var useOneColor = scope.$eval('me.item.useOneColor');
                     scope.config = loadConfiguration(type, scope);
+
+                    // Chart.Tooltip.positioners = {};
+                    // Chart.Tooltip.positioners.cursor = function(chartElements, coordinates) {
+                    //     return coordinates;
+                    // };
 
                     // Fix autoskip so last two scale labels don't overlap
                     Chart.scaleService.updateScaleDefaults('time', {
@@ -78,6 +88,15 @@ angular.module('ui').directive('uiChartJs', [ '$timeout', '$interpolate',
                                         scope.config = loadConfiguration(type, scope);
                                     }
                                 }
+                                if ((type === "bar") || (type === "horizontalBar")) {
+                                    if (useOneColor || (newValue.values.series.length > 1)) {
+                                        scope.config.colours = lineColours;
+                                    }
+                                    else { scope.config.colours = barColours; }
+                                }
+                                if (type === "pie") {
+                                    scope.config.colours = barColours;
+                                }
                                 scope.config.data = newValue.values.data;
                                 scope.config.series = newValue.values.series;
                                 scope.config.labels = newValue.values.labels;
@@ -122,17 +141,27 @@ function loadConfiguration(type,scope) {
     }
 
     //Build colours array
-    if ((type === 'line') || (type === 'bar') || (type === 'horizontalBar')) {
-        var colours = [];
+    var colours = [];
+    if (type === 'line') {
         baseColours.forEach(function(colour, index) {
             colours.push({
                 backgroundColor: colour,
                 borderColor: colour
-                // hoverBackgroundColor:colour,
-                // hoverBorderColor:colour
             });
         });
         config.colours = colours;
+        lineColours = colours;
+    }
+    else if ((type === 'bar') || (type === 'horizontalBar')) {
+        baseColours.forEach(function(colour, index) {
+            colours.push({
+                backgroundColor: baseColours,
+                borderColor: "#888",
+                borderWidth: 1
+            });
+        });
+        config.colours = colours;
+        barColours = colours;
     }
     else {
         config.colours = baseColours;
@@ -166,6 +195,9 @@ function loadConfiguration(type,scope) {
 
         config.options.tooltips = {
             mode: 'x-axis',
+            position: 'cursor',
+            bodyFontSize: 10,
+            bodySpacing: 0,
             callbacks: {
                 title: function(tooltip, data) {
                     // Display and format the most recent time value as the title.
@@ -274,14 +306,18 @@ function loadConfiguration(type,scope) {
 
     // Configure legend
     if (type !== 'bar' && type !== 'horizontalBar' && JSON.parse(legend)) {
-        config.options.legend = { display: true };
-        if ((type === 'pie') || (type="polar-area") || (type="radar")) {
+        config.options.legend = {
+            display:true,
+            position:'top',
+            labels: { boxWidth:10, fontSize:12, padding:8 }
+        };
+        if ((type === "pie") || (type === "polar-area") || (type === "radar")) {
             config.options.legend.position = 'left';
         }
 
         //set colours based on widget text colour
         if (themeState) {
-            config.options.legend.labels = { fontColor:themeState['widget-textColor'].value };
+            config.options.legend.labels.fontColor = themeState['widget-textColor'].value;
         }
     }
     return config;

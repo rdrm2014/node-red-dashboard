@@ -13,7 +13,7 @@ module.exports = function(RED) {
         var control = {
                 type: 'dropdown',
                 label: config.label,
-                placeholder: config.place || "Select option",
+                place: config.place || "Select option",
                 order: config.order,
                 value: config.payload || node.id,
                 width: config.width || group.config.width || 6,
@@ -89,7 +89,7 @@ module.exports = function(RED) {
                     emitOptions.isOptionsValid = true;
                 } while (false);
                 // finally adjust msg to reflect the input
-                msg.fromInput = true;
+                msg._fromInput = true;
                 if (emitOptions.isOptionsValid) {
                     control.options = emitOptions.newOptions;
                     control.value = emitOptions.value;
@@ -102,7 +102,7 @@ module.exports = function(RED) {
                 if (msg.hasOwnProperty("payload")) {
                     emitOptions.value = msg.payload;
                     control.value = emitOptions.value;
-                    emitOptions.fromInput = true;
+                    emitOptions._fromInput = true;
                     return emitOptions;
                 }
                 // we do not overide payload here due to 'opt.emitOnlyNewValues' in ui.js
@@ -115,7 +115,7 @@ module.exports = function(RED) {
             },
 
             beforeSend: function (msg) {
-                if (msg.fromInput) {
+                if (msg._fromInput) {
                     delete msg.options;
                     msg.payload = emitOptions.value;
                 }
