@@ -1,4 +1,15 @@
 
+### 2.6.0-beta: Milestone Release
+
+**Enhancements**
+
+ - Let widgets have properties set by `msg.ui_control` object - see config-fields.md- Issue #235
+
+ **Fixes**
+
+ - Fix TTS to pick correct voice at start  - Issue #291
+ - Fix TTS to try to select similar voice across different browsers - Issue #292
+
 ### 2.5.1: Maintenance Release
 
 **Fixes**
