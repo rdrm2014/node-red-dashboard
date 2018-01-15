@@ -41,6 +41,22 @@ var removeStateTimeout = 1000;
 var ev = new events.EventEmitter();
 ev.setMaxListeners(0);
 
+// default manifest.json to be returned as required.
+var mani = {
+    "name": "Node-RED Dashboard",
+    "short_name": "Dashboard",
+    "description": "A dashboard for Node-RED",
+    "start_url": "./#/0",
+    "background_color": "#910000",
+    "theme_color": "#910000",
+    "display": "standalone",
+    "icons": [
+        {"src":"icon192x192.png", "sizes":"192x192", "type":"image/png"},
+        {"src":"icon120x120.png", "sizes":"120x120", "type":"image/png"},
+        {"src":"icon64x64.png", "sizes":"64x64", "type":"image/png"}
+    ]
+}
+
 function toNumber(keepDecimals, config, input) {
     if (input === undefined) { return; }
     if (typeof input !== "number") {
@@ -133,11 +149,6 @@ function add(opt) {
 
         // let any arriving msg.ui_control message mess with control parameters
         if (msg.ui_control && (typeof msg.ui_control === "object") && (!Array.isArray(msg.ui_control)) && (!Buffer.isBuffer(msg.ui_control) )) {
-            // if (settings.verbose) {
-            //     var p = opt.control;
-            //     delete p.order; delete p.id; delete p.name; delete p.value;
-            //     console.log("UI-OBJ",JSON.stringify(p));
-            // }
             var changed = {};
             for (var property in msg.ui_control) {
                 if (msg.ui_control.hasOwnProperty(property) && opt.control.hasOwnProperty(property)) {
@@ -148,7 +159,6 @@ function add(opt) {
                 }
             }
             if (Object.keys(changed).length !== 0) {
-                //updateUi();  // the flashing may deter people doing it all the time :-)
                 io.emit('ui-control', {control:changed, id:opt.node.id});
             }
             if (!msg.hasOwnProperty("payload")) { return; }
@@ -273,7 +283,7 @@ function add(opt) {
     };
 }
 
-//from: http://stackoverflow.com/a/28592528/3016654
+//from: https://stackoverflow.com/a/28592528/3016654
 function join() {
     var trimRegex = new RegExp('^\\/|\\/$','g'),
     paths = Array.prototype.slice.call(arguments);
@@ -296,6 +306,7 @@ function init(server, app, log, redSettings) {
 
     fs.stat(path.join(__dirname, 'dist/index.html'), function(err, stat) {
         if (!err) {
+            app.use( join(settings.path,"manifest.json"), function(req, res) { res.send(mani); });
             app.use( join(settings.path), serveStatic(path.join(__dirname, "dist")) );
         }
         else {
@@ -303,7 +314,7 @@ function init(server, app, log, redSettings) {
             app.use(join(settings.path), serveStatic(path.join(__dirname, "src")));
             var vendor_packages = [
                 'angular', 'angular-sanitize', 'angular-animate', 'angular-aria', 'angular-material', 'angular-touch',
-                'angular-material-icons', 'svg-morpheus', 'font-awesome',
+                'angular-material-icons', 'svg-morpheus', 'font-awesome', 'weather-icons-lite',
                 'sprintf-js',
                 'jquery', 'jquery-ui',
                 'd3', 'raphael', 'justgage',
@@ -325,18 +336,19 @@ function init(server, app, log, redSettings) {
         socket.on(updateValueEventName, ev.emit.bind(ev, updateValueEventName));
         socket.on('ui-replay-state', function() {
             var ids = Object.getOwnPropertyNames(replayMessages);
-            ids.forEach(function (id) {
-                socket.emit(updateValueEventName, replayMessages[id]);
-            });
+            setTimeout(function() {
+                ids.forEach(function (id) {
+                    socket.emit(updateValueEventName, replayMessages[id]);
+                });
+            }, 50);
             socket.emit('ui-replay-done');
         });
         socket.on('ui-change', function(index) {
             var name = "";
-            var tl = menu.length;
-            if (tl > 0 && index <= tl) {
-                name = menu[index].header === undefined ? menu[index].name : menu[index].header;
+            if ((index != null) && !isNaN(index) && (menu.length > 0) && (index <= menu.length)) {
+                name = (menu[index].hasOwnProperty("header") && typeof menu[index].header !== 'undefined') ? menu[index].header : menu[index].name;
+                ev.emit("changetab", index, name, socket.client.id, socket.request.connection.remoteAddress);
             }
-            ev.emit("changetab", index, name, socket.client.id, socket.request.connection.remoteAddress);
         });
         socket.on('ui-refresh', function() {
             updateUi();
@@ -487,6 +499,10 @@ function addLink(name, link, icon, order, target) {
 
 function addBaseConfig(config) {
     if (config) { baseConfiguration = config; }
+    mani.name = config.site.name;
+    mani.short_name = mani.name.replace("Node-RED","").trim();
+    mani.background_color = config.theme.themeState["page-titlebar-backgroundColor"].value;
+    mani.theme_color = config.theme.themeState["page-titlebar-backgroundColor"].value;
     updateUi();
 }
 

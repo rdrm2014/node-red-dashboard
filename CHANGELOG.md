@@ -1,14 +1,71 @@
 
-### 2.6.0-beta: Milestone Release
+### 2.8.0-beta: Milestone Release
 
 **Enhancements**
 
- - Let widgets have properties set by `msg.ui_control` object - see config-fields.md- Issue #235
+ - Allow groups to be collapsed (extra option in group config) - PR #333 Issue #73 and #177
+ - Add a bit more status to switch, slider, numeric and dropdown - Issue #335
+ - Add vertical slider capability if height > width
+ - Add scope.theme to ui_template scope to allow users to pick up default colours
+ - Add scope watch example to ui_template info panel
+
+**Fixes**
+
+ - Fix text time input format to report in millisecs from local midnight
+ - Fix change tab event to report correctly when switching to tab 0
+ - Fix template editor minimum height so always visible
+
+### 2.7.0: Milestone Release
+
+**Enhancements**
+
+ - Add initial manifest.json capability for Android add to home screen
+ - Add weather-icons-lite font - may finally close #165
+ - Let boolean false values also create gaps in charts (as well as null)
+ - Add status to switch widget (and slider, numeric and dropdown) - Issue #314
+ - Add "welcome" page to blank dashboard - Issue #318
+ - Add i18n for base pages (thanks Nishiyama-san)- PR #315
+
+**Fixes**
+
+ - Fix tab to send data from text entry field - Issue #307
+ - Fix colour picker hex output/passthrough - Issue #308
+ - Ensure there is a base tab to switch to at start - Issue #310
+ - Constrain changetab event when starting up with blank dashboard
+ - Update ui-masonry to fix layouts - PR #312
+ - Fix path join for icon link to dashboard - Issue #319
+
+### 2.6.2: Maintenance Release
+
+**Fixes**
+
+ - Fix problem with partial deploy - Issue #279
+ - Remove `msg.` option from Button as makes no sense without node context - Issue #301
+ - Better handling of empty data series in chart data
+
+**Enhancements**
+
+ - Add time option to text input widget.
+ - Let colour picker optionally send outputs as they change - Issue #299
+
+### 2.6.1: Maintenance Release
+
+**Fixes**
+
+ - Fix "connection lost" on initial load - Issue #298
+
+### 2.6.0: Milestone Release
+
+**Enhancements**
+
+ - Let widgets have properties set by `msg.ui_control` object - see config-fields.md - Issue #235
+ - Let charts lines have gaps by sending null as payload.
 
  **Fixes**
 
  - Fix TTS to pick correct voice at start  - Issue #291
  - Fix TTS to try to select similar voice across different browsers - Issue #292
+ - Fix chart colours to re-initialise correctly on refresh - Issue #296
 
 ### 2.5.1: Maintenance Release
 

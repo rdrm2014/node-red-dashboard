@@ -229,6 +229,7 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
         events.connect(function (ui, done) {
             main.menu = ui.menu;
             main.globals = ui.globals;
+            main.nothing = false;
             var name;
             if (ui.site) {
                 name = ui.site.name;
@@ -265,6 +266,7 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
                 }
                 $mdToast.hide();
                 processGlobals();
+                events.emit('ui-change', prevTabIndex);
                 done();
             }
             if (!isNaN(prevTabIndex) && prevTabIndex < main.menu.length) {
@@ -283,8 +285,11 @@ app.controller('MainController', ['$mdSidenav', '$window', 'UiEvents', '$locatio
                     })
                     if (indexToOpen !== null) {
                         main.open(main.menu[indexToOpen], indexToOpen);
+                        finishLoading();
                     }
-                    finishLoading();
+                    else {
+                        main.nothing = true;
+                    }
                 }, 50);
             }
             main.len = main.menu.length;

@@ -37,7 +37,9 @@ module.exports = function(RED) {
                 xformat : config.xformat || "HH:mm:ss",
                 cutout: parseInt(config.cutout || 0),
                 colors: config.colors,
-                useOneColor: config.useOneColor || false
+                useOneColor: config.useOneColor || false,
+                animation: false,
+                spanGaps: false
             },
             convertBack: function(data) {
                 if (node.newStyle) {
@@ -85,13 +87,15 @@ module.exports = function(RED) {
                     // New style
                     if (!value[0].hasOwnProperty("key")) {
                         if (value[0].hasOwnProperty("series") && value[0].hasOwnProperty("data")) {
+                            var flag = true;
+                            for (var dd = 0; dd < value[0].data.length; dd++ ) {
+                                if (!isNaN(value[0].data[dd][0])) { flag = false; }
+                            }
                             if (node.chartType === "line") {
-                                if (isNaN(value[0].data[0][0])) {
-                                    delete value[0].labels;
-                                }
+                                if (flag) { delete value[0].labels; }
                             }
                             else if (node.chartType === "bar" || node.chartType === "horizontalBar") {
-                                if (isNaN(value[0].data[0][0])) {
+                                if (flag) {
                                     var tmp = [];
                                     for (var d=0; d<value[0].data.length; d++) {
                                         tmp.push([value[0].data[d]]);
@@ -102,11 +106,6 @@ module.exports = function(RED) {
                                     value[0].labels = tmp2;
                                 }
                             }
-                            // else if (node.chartType === "pie") {
-                            //     var tmp3 = value[0].series;
-                            //     value[0].series = value[0].labels;
-                            //     value[0].labels = tmp3;
-                            // }
                             value = [{ key:node.id, values:(value[0] || {series:[], data:[], labels:[]}) }];
                         }
                         else {
@@ -146,8 +145,11 @@ module.exports = function(RED) {
                     converted.updatedValues = value;
                 }
                 else {
-                    value = parseFloat(value);                      // only handle numbers
-                    if (isNaN(value)) { return; }                   // return if not a number
+                    if (value === false) { value = null; }              // let false also create gaps in chart
+                    if (value !== null) {                               // let null object through for gaps
+                        value = parseFloat(value);                      // only handle numbers
+                        if (isNaN(value)) { return; }                   // return if not a number
+                    }
                     converted.newPoint = true;
                     var label = msg.label || " ";
                     var series = msg.series || msg.topic || "";
@@ -236,12 +238,14 @@ module.exports = function(RED) {
             }
         };
 
-        ui.ev.on('changetab', function() {
+        var chgtab = function() {
             node.receive({payload:"R"});
-        });
+        };
+        ui.ev.on('changetab', chgtab);
 
         var done = ui.add(options);
-        setTimeout(function() {
+
+        var st = setTimeout(function() {
             node.emit("input",{payload:"start"}); // trigger a redraw at start to flush out old data.
             if (node.wires.length === 2) { // if it's an old version of the node honour it
                 node.send([null, {payload:"restore", for:node.id}]);
@@ -249,7 +253,7 @@ module.exports = function(RED) {
         }, 100);
 
         node.on("close", function() {
-            ui.ev.removeAllListeners();
+            ui.ev.removeListener('changetab', chgtab);
             done();
         })
     }

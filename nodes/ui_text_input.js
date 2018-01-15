@@ -26,8 +26,9 @@ module.exports = function(RED) {
                 height: config.height || 1
             },
             beforeSend: function (msg) {
+                if (config.mode === "time") { msg.payload = Date.parse(msg.payload); }
                 msg.topic = config.topic || msg.topic;
-            },
+            }
         });
         node.on("close", done);
     }
