@@ -1,5 +1,18 @@
 
-### 2.8.0-beta: Milestone Release
+### 2.8.1: Maintenance Release
+
+**Enhancements**
+
+ - Let Gauge widget accept {{payload.foo.bar}} style property input
+
+**Fixes**
+
+ - Fix references to FontAwesome to pin to version 4.7.0 icons
+ - Give numeric field a width so buttons don't wobble (so much)
+ - Let gauge change labels more dynamically
+ - ensure dateFormat defaults to something valid
+
+### 2.8.0: Milestone Release
 
 **Enhancements**
 
@@ -11,9 +24,10 @@
 
 **Fixes**
 
- - Fix text time input format to report in millisecs from local midnight
+ - Fix text time input format to report in milliseconds from local midnight
  - Fix change tab event to report correctly when switching to tab 0
  - Fix template editor minimum height so always visible
+ - Fix sanitise notification html input, but allow basic markup.
 
 ### 2.7.0: Milestone Release
 
